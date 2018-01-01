@@ -10,7 +10,7 @@
 #include <memory>
 
 namespace ctl {
-	template<class T>
+	template<class T, class Allocator = std::allocator<T> >
 	class collection;
 
 	template<class T>
@@ -32,17 +32,17 @@ namespace ctl {
 		typedef std::function<bool(const_reference, const_reference)> comparer;
 	public:
 		inline virtual void append(const collection<value_type> &value) = 0;
-		inline virtual void append(const_reference value) = 0; // qt
-		inline virtual void append(value_type &&value) = 0; // qt
+		inline void append(const_reference value); // qt
+		inline void append(value_type &&value); // qt
 
 		inline virtual void clear() noexcept = 0; // stl
 
-		template<class... Args>
-		inline virtual iterator emplace(const_iterator position, Args &&... args) = 0;
-		template<class... Args>
-		inline virtual iterator emplace_hint(const_iterator hint, Args &&... args) = 0;
-		template<class... Args>
-		inline virtual reference emplace_back(Args &&... args) = 0;
+//		template<class... Args>
+//		inline virtual iterator emplace(const_iterator position, Args &&... args) = 0;
+//		template<class... Args>
+//		inline virtual iterator emplace_hint(const_iterator hint, Args &&... args) = 0;
+//		template<class... Args>
+//		inline virtual reference emplace_back(Args &&... args) = 0;
 
 		inline virtual iterator erase(const_iterator position) = 0;
 		inline virtual iterator erase(const_iterator first, const_iterator last) = 0;
@@ -53,8 +53,8 @@ namespace ctl {
 		inline virtual iterator insert(const_iterator before, size_type count, const_reference value) = 0; // stl
 		inline virtual iterator insert(const_iterator position, std::initializer_list<value_type> il) = 0; // stl
 		inline virtual void insert(size_type i, size_type count, const_reference value) = 0; // qt
-		template<class InputIterator>
-		inline virtual iterator insert(const_iterator position, InputIterator first, InputIterator last) = 0;
+//		template<class InputIterator>
+//		inline virtual iterator insert(const_iterator position, InputIterator first, InputIterator last) = 0;
 
 		inline virtual void pop_back() = 0; // stl
 		inline virtual void pop_front() = 0; // myself(-vector)
@@ -72,6 +72,14 @@ namespace ctl {
 		inline virtual void swap(collection<value_type> &other) noexcept = 0; // qt
 	};
 	template<class T>
+	void modifiable<T>::append(const_reference value) {
+		push_back(value);
+	}
+	template<class T>
+	void modifiable<T>::append(value_type &&value) {
+		push_back(value);
+	}
+	template<class T>
 	void modifiable<T>::remove_last() {
 		pop_back();
 	}
@@ -79,6 +87,8 @@ namespace ctl {
 	void modifiable<T>::remove_first() {
 		pop_front();
 	}
+
+
 }
 
 #endif //COLLECTIONS_MODIFIABLE_HPP

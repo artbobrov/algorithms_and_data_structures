@@ -49,7 +49,7 @@ namespace ctl {
 		return std::numeric_limits<difference_type>::max();
 	}
 	template<class T>
-	reservable::size_type reservable<T>::size() const noexcept {
+	typename reservable<T>::size_type reservable<T>::size() const noexcept {
 		return _count;
 	}
 
