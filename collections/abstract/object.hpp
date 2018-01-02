@@ -14,7 +14,7 @@ namespace ctl {
 	public:
 		virtual explicit operator std::string() const noexcept = 0; // c#
 
-		friend std::ostream &operator<<(std::ostream &os, const object &obj) {
+		friend std::ostream &operator<<(std::ostream &os, const object &obj) { // OK
 			os << std::string(obj);
 			return os;
 		}
