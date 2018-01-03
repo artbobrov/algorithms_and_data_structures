@@ -38,12 +38,7 @@ namespace ctl {
 
 		inline virtual void clear() noexcept = 0; // stl
 
-		//		template<class... Args>
-		//		inline virtual iterator emplace(const_iterator position, Args &&... args) = 0;
-		//		template<class... Args>
-		//		inline virtual iterator emplace_hint(const_iterator hint, Args &&... args) = 0;
-		//		template<class... Args>
-		//		inline virtual reference emplace_back(Args &&... args) = 0;
+
 
 		inline virtual iterator erase(const_iterator position) = 0;
 		inline virtual iterator erase(const_iterator first, const_iterator last) = 0;
@@ -54,8 +49,6 @@ namespace ctl {
 		inline virtual iterator insert(const_iterator before, size_type count, const_reference value) = 0; // stl
 		inline virtual iterator insert(const_iterator position, std::initializer_list<value_type> il) = 0; // stl
 		inline virtual void insert(size_type i, size_type count, const_reference value) = 0; // qt
-		//		template<class InputIterator>
-		//		inline virtual iterator insert(const_iterator position, InputIterator first, InputIterator last) = 0;
 
 		inline virtual void pop_back() = 0; // stl
 		inline virtual void pop_front() = 0; // myself(-vector)
@@ -64,13 +57,11 @@ namespace ctl {
 		inline virtual void push_front(const_reference value) = 0; // myself(-vector)
 		inline virtual void push_front(value_type &&value) = 0; // myself(-vector)
 
-		inline virtual void resize(size_type count) = 0;
-		inline virtual void resize(size_type count, const_reference value) = 0; // stl
+		inline virtual void resize(size_type count) = 0; // stl
+		inline virtual void resize(size_type count, const T &value) = 0; // stl
 		inline void remove_last(); // qt
 		inline void remove_first(); // qt
 
-
-		inline virtual void swap(collection<value_type, allocator_type> &other) noexcept = 0; // qt
 	};
 	template<class T, class Allocator>
 	void modifiable<T, Allocator>::append(const_reference value) {
