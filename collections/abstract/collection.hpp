@@ -1,202 +1,234 @@
 //
-// Created by Artem Bobrov on 26.12.2017.
+// Created by Artem Bobrov on 01.01.2018.
 //
 
-#ifndef COLLECTIONS_ICOLLECTION_HPP
-#define COLLECTIONS_ICOLLECTION_HPP
+#ifndef COLLECTIONS_COLLECTION_HPP
+#define COLLECTIONS_COLLECTION_HPP
 
-#include <memory>
-#include <functional>
+#include "object.hpp"
+#include "element_accessible.hpp"
+#include "iterable.hpp"
+#include "reservable.hpp"
+#include "modifiable.hpp"
+
 #include <vector>
 #include <list>
 #include <set>
 
-#include "object.hpp"
-#include "resizable.hpp"
-#include "enumerable.hpp"
-
 namespace ctl {
 
-	template<class T>
-	class collection : public enumerable<T>, public resizable<T> {
+	template<class T, class Allocator = std::allocator<T> >
+	class collection
+		: public object,
+		  public element_accessible<T>,
+		  public iterable<T>,
+		  public reservable<T>,
+		  public modifiable<T, Allocator> {
 	public:
-		typedef typename enumerable<T>::value_type value_type;
-		typedef typename enumerable<T>::iterator iterator;
-		typedef typename enumerable<T>::const_iterator const_iterator;
-		typedef typename enumerable<T>::reverse_iterator reverse_iterator;
-		typedef typename enumerable<T>::const_reverse_iterator const_reverse_iterator;
-		typedef typename enumerable<T>::pointer pointer;
-		typedef typename enumerable<T>::reference reference;
-		typedef typename enumerable<T>::const_reference const_reference;
-		typedef typename object::size_type size_type;
-		typedef typename enumerable<T>::difference_type difference_type;
+		typedef Allocator allocator_type;
+		typedef T value_type;
+		typedef value_type *iterator;
+		typedef const iterator const_iterator;
+		typedef std::reverse_iterator<iterator> reverse_iterator;
+		typedef const std::reverse_iterator<iterator> const_reverse_iterator;
+		typedef iterator pointer;
+		typedef value_type &reference;
+		typedef const reference const_reference;
+		typedef size_t size_type;
+		typedef std::ptrdiff_t difference_type;
 
-		typedef typename enumerable<T>::conformer conformer;
+		typedef std::function<bool(const_reference)> conformer;
 		typedef std::function<void(reference)> action;
 		typedef std::function<bool(const_reference, const_reference)> comparer;
 	public:
-		virtual void append(const collection<value_type> &value) = 0; // qt
+		inline virtual void append(const collection<value_type, allocator_type> &value) = 0; // N_I
+		inline allocator_type allocator() const noexcept; // 
 
-		inline bool contains(const_reference item) const; // qt
-		inline int count(const_reference item) const noexcept; // qt
-		inline virtual size_type count() const noexcept = 0; // qt
-		inline virtual size_type size() const noexcept = 0; // stl
-		inline virtual size_type capacity() const noexcept = 0; // stl
+		inline bool contains(const_reference item) const; // qt 
+		inline size_type count(const_reference item) const noexcept; // qt 
+		inline const_reverse_iterator crbegin() const noexcept override; // stl
+		inline const_reverse_iterator crend() const noexcept override; // stl
 
-		inline virtual pointer data() noexcept = 0; // stl
-		inline virtual const pointer data() const noexcept = 0; // stl
-		inline virtual collection<value_type> &distinct(comparer comp) = 0; // c#
+		inline void foreach(action act); // c# 
+		inline void fill(const T &value); // qt 
+		inline void fill(iterator first, iterator last, const T &value); // qt 
+		inline void fill(const T &value, size_type size); // qt
 
-		inline virtual bool empty() const noexcept = 0; // stl
-		inline virtual iterator erase(iterator pos) = 0; // stl
-		inline virtual iterator erase(iterator begin, iterator end) = 0; // stl
-		inline virtual collection<value_type> &except(const collection<value_type> &other) = 0; // c#
+		inline size_type index_of(const_reference value, size_type first, size_type last) const; // qt 
+		inline iterator index_of(const_reference value, iterator first, iterator last) const; // myself 
 
-		inline void foreach(action act); // c#
+		inline void reverse(); // c# 
+		inline void reverse(iterator first, iterator last); // c# 
 
-		inline void fill(const_reference value, size_type size = -1); // qt
-		inline void fill(const value_type value, size_type size = -1); // qt
-		inline collection<value_type> &filled(const_reference value, size_type size = -1); // qt
-		inline collection<value_type> &filled(const value_type value, size_type size = -1); // qt
+		inline virtual void remove_all(const_reference item); // qt 
+		inline virtual void remove_at(int i); // qt 
+		inline virtual void remove(const_reference item); // qt 
+		inline reverse_iterator rbegin() noexcept override; // 
+		inline const_reverse_iterator rbegin() const noexcept override; // 
+		inline reverse_iterator rend() noexcept override; // 
+		inline const_reverse_iterator rend() const noexcept override; // 
 
-		inline size_type index(const_reference of, size_type begin, size_type end) const; // qt
-		inline iterator index(const_reference of, iterator begin, iterator end) const; // myself
+		inline virtual std::vector<value_type, allocator_type> to_std_vector() const noexcept; // qt 
+		inline virtual std::list<value_type, allocator_type> to_std_list() const noexcept; // c# 
+		inline virtual std::set<value_type> to_std_set() const noexcept; // c# 
+		inline bool true_for_all(conformer conform); // c# 
 
-		inline virtual collection<value_type> &concat(const enumerable<value_type> &other) = 0; // c# == x + y
-
-
-		inline virtual void resize(size_type sz) = 0; // stl
-		inline virtual void resize(size_type sz, const_reference c) = 0; // stl
-
-		inline virtual void replace(const_iterator begin,
-		                            const_iterator end,
-		                            enumerable<value_type> &other) = 0; // swift
-		inline virtual void remove_all(const_reference item) = 0; // qt
-		inline virtual void remove_at(int i) = 0; // qt
-		inline virtual void remove(const_reference item) = 0; // qt
-
-		inline virtual void shrink_to_fit() noexcept = 0; // stl
-		inline virtual void swap(collection<value_type> &other) = 0; // qt
-
-
-		inline virtual difference_type max_size() const noexcept = 0; // stl
-
-		// TODO: function by default
-		// TODO: function specialization for int/double/uint/long long ect.
-		inline virtual value_type min(const_reference max_value, comparer comp) = 0; // c#
-		inline virtual value_type min(iterator begin,
-		                              iterator end,
-		                              const_reference max_value,
-		                              comparer comp) = 0; // +c#
-
-		inline virtual value_type max(const_reference min_value, comparer comp) = 0; // c#
-		inline virtual value_type max(iterator begin,
-		                              iterator end,
-		                              const_reference min_value,
-		                              comparer comp) = 0; // +c#
-
-		inline virtual value_type sum(const_reference zero_value) = 0; // c#
-		inline virtual value_type sum(iterator begin,
-		                              iterator end,
-		                              const_reference zero_value) = 0; // +c#
-
-
-		inline collection<collection<value_type> > split(const_reference element,
-		                                                 int max_splits,
-		                                                 bool omitting_empty_subsequences); // swift
-		inline collection<collection<value_type> > split(int max_splits,
-		                                                 bool omitting_empty_subsequences,
-		                                                 conformer is_separator); // swift
-
-		inline virtual std::vector<value_type> to_std_vector() const noexcept = 0; // qt
-		inline virtual std::list<value_type> to_std_list() const noexcept = 0; // c#
-		inline virtual std::set<value_type> to_std_set() const noexcept = 0; // c#
-
-	private:
-		const size_type _empty_flag_int_ = -1;
-		const_iterator _empty_flag_iterator_ = nullptr;
+		inline virtual collection<value_type> &subsequence(const_iterator from, const_iterator to); // 
+		inline virtual collection<value_type> &subsequence(size_type from, size_type to); // 
+	protected:
+		allocator_type _allocator;
 	};
 
-	template<class T>
-	inline void collection<T>::foreach(action act) {
-		for (reference element: *this)
-			act(element);
+	template<class T, class Allocator>
+	typename collection<T, Allocator>::allocator_type collection<T, Allocator>::allocator() const noexcept {
+		return _allocator;
 	}
 
-	template<class T>
-	inline void collection<T>::fill(const_reference value, size_type size) {
-		if (size > -1)
-			this->resize(size);
-		for (reference element: *this)
-			element = value;
-	}
-	template<class T>
-	inline void collection<T>::fill(const value_type value, size_type size) {
-		if (size > -1)
-			this->resize(size);
-		for (reference element: *this)
-			element = value;
-	}
-	template<class T>
-	inline collection<typename collection<T>::value_type> &collection<T>::filled(const_reference value, size_type size) {
-		_NOT_IMPLEMENTED_;
-	}
-	template<class T>
-	inline collection<typename collection<T>::value_type> &collection<T>::filled(const value_type value, size_type size) {
-		_NOT_IMPLEMENTED_;
-	}
-
-	template<class T>
-	inline typename collection<T>::size_type collection<T>::index(const_reference of,
-	                                                              size_type begin,
-	                                                              size_type end) const {
-		for (size_type i = begin; i <= end; ++i)
-			if (of == this[i])
-				return i;
-
-		return _empty_flag_int_;
-	}
-
-	template<class T>
-	inline typename collection<T>::iterator collection<T>::index(const_reference of,
-	                                                             iterator begin,
-	                                                             iterator end) const {
-		for (iterator it = begin; it != end; ++it) {
-			if (of == *it)
-				return it;
-		}
-		return _empty_flag_iterator_;
-	}
-
-	template<class T>
-	inline bool collection<T>::contains(const_reference item) const {
+	template<class T, class Allocator>
+	bool collection<T, Allocator>::contains(const_reference item) const {
 		for (const_reference element: *this)
-			if (element == item)
+			if (item == element)
 				return true;
 		return false;
 	}
 
-	template<class T>
-	inline int collection<T>::count(const_reference item) const noexcept {
-		size_type count = 0;
+	template<class T, class Allocator>
+	typename collection<T, Allocator>::size_type collection<T, Allocator>::count(const_reference item) const noexcept {
+		size_type __count = 0;
 		for (const_reference element: *this)
 			if (item == element)
-				++count;
-		return ++count;
+				++__count;
+		return __count;
+	}
+	template<class T, class Allocator>
+	typename collection<T, Allocator>::const_reverse_iterator collection<T, Allocator>::crbegin() const noexcept {
+		return const_reverse_iterator(this->end());
+	}
+	template<class T, class Allocator>
+	typename collection<T, Allocator>::const_reverse_iterator collection<T, Allocator>::crend() const noexcept {
+		return const_reverse_iterator(this->begin());
 	}
 
-	template<class T>
-	inline collection<collection<typename collection<T>::value_type> > collection<T>::split(const_reference element,
-	                                                                                        int max_splits,
-	                                                                                        bool omitting_empty_subsequences) {
-		_NOT_IMPLEMENTED_;
+	template<class T, class Allocator>
+	void collection<T, Allocator>::foreach(action act) {
+		for (reference element: *this)
+			act(element);
+	}
+	template<class T, class Allocator>
+	void collection<T, Allocator>::fill(const T &value) {
+		fill(this->begin(), this->end(), value);
+	}
+	template<class T, class Allocator>
+	void collection<T, Allocator>::fill(iterator first, iterator last, const T &value) {
+		for (; first != last; ++first)
+			*first = value;
+	}
+	template<class T, class Allocator>
+	void collection<T, Allocator>::fill(const T &value, size_type size) {
+		resize(size, value);
 	}
 
-	template<class T>
-	inline collection<collection<typename collection<T>::value_type> > collection<T>::split(int max_splits,
-	                                                                                        bool omitting_empty_subsequences,
-	                                                                                        conformer is_separator) {
+	template<class T, class Allocator>
+	typename collection<T, Allocator>::size_type collection<T, Allocator>::index_of(const_reference value,
+	                                                                                size_type first,
+	                                                                                size_type last) const {
+		for (; first != last && this[first] != value; ++first) {}
+		return first == last ? this->size() : first;
+	}
+	template<class T, class Allocator>
+	typename collection<T, Allocator>::iterator collection<T, Allocator>::index_of(const_reference value,
+	                                                                               iterator first,
+	                                                                               iterator last) const {
+		for (; first != last && *first != value; ++first) {}
+		return first == last ? this->end() : first;
+	}
+	template<class T, class Allocator>
+	void collection<T, Allocator>::reverse() {
+		reverse(this->begin(), this->end() - 1);
+	}
+	template<class T, class Allocator>
+	void collection<T, Allocator>::reverse(iterator first, iterator last) {
+		using std::swap;
+
+		for (; first < last; ++first, --last) {
+			swap(*first, *last);
+		}
+	}
+
+	template<class T, class Allocator>
+	void collection<T, Allocator>::remove_all(const_reference item) {
+		for (iterator it = this->begin(); it != this->end(); ++it)
+			if (*it == item)
+				this->erase(it);
+	}
+	template<class T, class Allocator>
+	void collection<T, Allocator>::remove_at(int i) {
+		this->erase(this->begin() + i);
+	}
+
+	template<class T, class Allocator>
+	void collection<T, Allocator>::remove(const_reference item) {
+		for (iterator it = this->begin(); it != this->end(); ++it)
+			if (*it == item) {
+				this->erase(it);
+				break;
+			}
+	}
+	template<class T, class Allocator>
+	typename collection<T, Allocator>::reverse_iterator collection<T, Allocator>::rbegin() noexcept {
+		return reverse_iterator(this->end());
+	}
+	template<class T, class Allocator>
+	typename collection<T, Allocator>::const_reverse_iterator collection<T, Allocator>::rbegin() const noexcept {
+		return reverse_iterator(this->end());
+	}
+	template<class T, class Allocator>
+	typename collection<T, Allocator>::reverse_iterator collection<T, Allocator>::rend() noexcept {
+		return reverse_iterator(this->begin());
+	}
+	template<class T, class Allocator>
+	typename collection<T, Allocator>::const_reverse_iterator collection<T, Allocator>::rend() const noexcept {
+		return reverse_iterator(this->begin());
+	}
+
+	template<class T, class Allocator>
+	std::vector<typename collection<T, Allocator>::value_type,
+	            typename collection<T, Allocator>::allocator_type> collection<T,
+	                                                                          Allocator>::to_std_vector() const noexcept {
+		return std::vector<value_type, allocator_type>(this->begin(), this->end());
+	}
+	template<class T, class Allocator>
+	std::list<typename collection<T, Allocator>::value_type,
+	          typename collection<T, Allocator>::allocator_type> collection<T,
+	                                                                        Allocator>::to_std_list() const noexcept {
+		return std::list<value_type, allocator_type>(this->begin(), this->end());
+	}
+	template<class T, class Allocator>
+	std::set<typename collection<T, Allocator>::value_type> collection<T, Allocator>::to_std_set() const noexcept {
+		return std::set<value_type>(this->begin(), this->end());
+	}
+	template<class T, class Allocator>
+	bool collection<T, Allocator>::true_for_all(conformer conform) {
+		for (const_reference element: *this)
+			if (!conform(element))
+				return false;
+		return true;
+	}
+	template<class T, class Allocator>
+	collection<typename collection<T, Allocator>::value_type> &collection<T,
+	                                                                      Allocator>::subsequence(const_iterator from,
+	                                                                                              const_iterator to) {
+		//		collection<value_type, allocator_type> other(from, to);
 		_NOT_IMPLEMENTED_;
+		return *this;
+	}
+	template<class T, class Allocator>
+	collection<typename collection<T, Allocator>::value_type> &collection<T, Allocator>::subsequence(size_type from,
+	                                                                                                 size_type to) {
+		//		collection<value_type, allocator_type> other(begin() + from, begin() + to);
+		_NOT_IMPLEMENTED_;
+		return *this;
 	}
 }
-#endif //COLLECTIONS_ICOLLECTION_HPP
+
+#endif //COLLECTIONS_COLLECTION_HPP

@@ -1,5 +1,5 @@
 //
-// Created by Artem Bobrov on 27.12.2017.
+// Created by Artem Bobrov on 01.01.2018.
 //
 
 #ifndef COLLECTIONS_OBJECT_HPP
@@ -7,18 +7,14 @@
 
 #include <iostream>
 #include <string>
+
 #define _NOT_IMPLEMENTED_ throw std::logic_error("Function not yet implemented")
 namespace ctl {
 	class object {
 	public:
-		typedef int size_type;
-	public:
 		virtual explicit operator std::string() const noexcept = 0; // c#
 
-		// TODO: something using std::hash
-		inline virtual size_type hash() const = 0; // c#
-
-		friend std::ostream &operator<<(std::ostream &os, const object &obj) {
+		friend std::ostream &operator<<(std::ostream &os, const object &obj) { // OK
 			os << std::string(obj);
 			return os;
 		}
