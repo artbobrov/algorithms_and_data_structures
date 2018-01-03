@@ -41,8 +41,7 @@ namespace ctl {
 		typedef std::function<void(reference)> action;
 		typedef std::function<bool(const_reference, const_reference)> comparer;
 	public:
-		inline virtual void append(const collection<value_type, allocator_type> &value) = 0; // N_I
-		inline allocator_type allocator() const noexcept; // 
+		inline allocator_type allocator() const noexcept; // stl
 
 		inline bool contains(const_reference item) const; // qt 
 		inline size_type count(const_reference item) const noexcept; // qt 

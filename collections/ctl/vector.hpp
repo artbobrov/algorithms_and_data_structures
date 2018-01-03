@@ -83,12 +83,13 @@ namespace ctl {
 		inline vector<value_type, allocator_type> &filled(const T &value, size_type size); // qt+swift N_I
 
 
-		iterator insert(const_iterator before, const_reference value) override;
-		void insert(size_type i, const_reference value) override;
-		iterator insert(const_iterator before, value_type &&value) override;
-		iterator insert(const_iterator before, size_type count, const_reference value) override;
+		iterator insert(const_iterator position, const T &value) override; // OK
+		iterator insert(size_type idx, const T &value) override; // OK
+		iterator insert(const_iterator position, value_type &&value) override; // OK
+		iterator insert(const_iterator position, size_type count, const T &value) override; // OK
 		iterator insert(const_iterator position, std::initializer_list<value_type> il) override;
-		void insert(size_type i, size_type count, const_reference value) override;
+		iterator insert(size_type idx, size_type count, const T &value) override;
+
 		template<class InputIterator>
 		iterator insert(const_iterator position, InputIterator first, InputIterator last);
 
@@ -101,7 +102,7 @@ namespace ctl {
 
 		void resize(size_type count) override; // OK
 		void resize(size_type count, const T &value) override; // OK
-		void reserve(size_type n) override;
+		void reserve(size_type n) override; // OK
 		inline vector<value_type, allocator_type> &reversed(); // c# +/- OK
 		inline vector<value_type, allocator_type> &reversed(iterator first, iterator last); // c# +/- OK
 
@@ -219,13 +220,14 @@ namespace ctl {
 		return _end;
 	}
 	template<class T, class Allocator>
-	typename vector<T, Allocator>::iterator vector<T, Allocator>::erase(vector::const_iterator position) {
+	typename vector<T, Allocator>::iterator vector<T, Allocator>::erase(const_iterator position) {
+
 		_NOT_IMPLEMENTED_;
 		return nullptr;
 	}
 	template<class T, class Allocator>
-	typename vector<T, Allocator>::iterator vector<T, Allocator>::erase(vector::const_iterator first,
-	                                                                    vector::const_iterator last) {
+	typename vector<T, Allocator>::iterator vector<T, Allocator>::erase(const_iterator first,
+	                                                                    const_iterator last) {
 		_NOT_IMPLEMENTED_;
 		return nullptr;
 	}
@@ -235,7 +237,7 @@ namespace ctl {
 	}
 	template<class T, class Allocator>
 	template<class... Args>
-	typename vector<T, Allocator>::iterator vector<T, Allocator>::emplace(vector::const_iterator position,
+	typename vector<T, Allocator>::iterator vector<T, Allocator>::emplace(const_iterator position,
 	                                                                      Args &&... args) {
 		_NOT_IMPLEMENTED_;
 		return nullptr;
@@ -243,7 +245,7 @@ namespace ctl {
 
 	template<class T, class Allocator>
 	template<class... Args>
-	typename vector<T, Allocator>::iterator vector<T, Allocator>::emplace_hint(vector::const_iterator hint,
+	typename vector<T, Allocator>::iterator vector<T, Allocator>::emplace_hint(const_iterator hint,
 	                                                                           Args &&... args) {
 		_NOT_IMPLEMENTED_;
 		return nullptr;
@@ -288,32 +290,60 @@ namespace ctl {
 	}
 
 	template<class T, class allocator>
-	void vector<T, allocator>::insert(size_type i, const_reference value) {
-		_NOT_IMPLEMENTED_;
+	typename vector<T, allocator>::iterator vector<T, allocator>::insert(size_type idx, const T &value) {
+
+		return insert(_begin + idx, value);
 	}
 
 	template<class T, class allocator>
-	void vector<T, allocator>::insert(size_type i, size_type count, const_reference value) {
-		_NOT_IMPLEMENTED_;
-	}
-	template<class T, class allocator>
-	typename vector<T, allocator>::iterator vector<T, allocator>::insert(const_iterator before,
+	typename vector<T, allocator>::iterator vector<T, allocator>::insert(size_type idx,
 	                                                                     size_type count,
-	                                                                     const_reference value) {
-		_NOT_IMPLEMENTED_;
-		return nullptr;
+	                                                                     const T &value) {
+		return insert(_begin + idx, count, value);
+	}
+	template<class T, class allocator>
+	typename vector<T, allocator>::iterator vector<T, allocator>::insert(const_iterator position,
+	                                                                     size_type count,
+	                                                                     const T &value) {
+		size_type __capacity = _recommend(std::max(size() + count, static_cast<size_type>(position - _begin + count)));
+		iterator _start = this->_allocator.allocate(__capacity);
+		iterator middle = _copy_data(_begin, std::min(_end, position), _start);
+		if (_end < position) {
+			middle += static_cast<size_type>(position - _end);
+			_end = middle + count;
+
+		} else {
+			_end = _copy_data(position, _end, middle + count);
+		}
+		for (size_t idx = 0; idx < count; idx++)
+			this->_allocator.construct(middle + idx, value);
+		_delete_data(_begin, _storage_end);
+		_begin = _start;
+		_storage_end = _begin + __capacity;
+		return middle;
 	}
 
 	template<class T, class allocator>
-	typename vector<T, allocator>::iterator vector<T, allocator>::insert(const_iterator before, const_reference value) {
-		_NOT_IMPLEMENTED_;
-		return nullptr;
+	typename vector<T, allocator>::iterator vector<T, allocator>::insert(const_iterator position, const T &value) {
+		return insert(position, 1, value);
 	}
 
 	template<class T, class allocator>
-	typename vector<T, allocator>::iterator vector<T, allocator>::insert(const_iterator before, value_type &&value) {
-		_NOT_IMPLEMENTED_;
-		return nullptr;
+	typename vector<T, allocator>::iterator vector<T, allocator>::insert(const_iterator position, value_type &&value) {
+		size_type __capacity = _recommend(std::max(size() + 1, static_cast<size_type>(position - _begin + 1)));
+		iterator _start = this->_allocator.allocate(__capacity);
+		iterator middle = _copy_data(_begin, std::min(_end, position), _start);
+		if (_end < position) {
+			middle += static_cast<size_type>(position - _end);
+			_end = middle + 1;
+		} else {
+			_end = _copy_data(position, _end, middle + 1);
+		}
+		this->_allocator.construct(middle, std::move(value));
+		_delete_data(_begin, _storage_end);
+		_begin = _start;
+		_storage_end = _begin + __capacity;
+		return middle;
 	}
 
 	template<class T, class allocator>
@@ -327,8 +357,11 @@ namespace ctl {
 	typename vector<T, Allocator>::iterator vector<T, Allocator>::insert(const_iterator position,
 	                                                                     InputIterator first,
 	                                                                     InputIterator last) {
-		_NOT_IMPLEMENTED_;
+
+		std::cout << typeid(first).name() << std::endl;
+		std::cout << *first << " " << *(last - 1) << std::endl; // Y it is not compiling
 		return nullptr;
+
 	}
 	template<class T, class allocator>
 	void vector<T, allocator>::pop_back() {
@@ -465,11 +498,16 @@ namespace ctl {
 	vector<T, allocator>::operator std::string() const noexcept {
 		using std::to_string;
 		std::string output = '[' + to_string(this->size()) + ',' + to_string(this->capacity()) + "] ";
-		for (reference element: *this)
+		for (reference element: *this) {
+			//			try {
 			output += to_string(element) + " ";
+			//			}
+			//			catch(std::exception e) {}
+		}
 		output.pop_back();
 		return output;
 	}
 }
 
 #endif //COLLECTIONS_VECTOR_HPP
+

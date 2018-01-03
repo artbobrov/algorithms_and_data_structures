@@ -43,12 +43,12 @@ namespace ctl {
 		inline virtual iterator erase(const_iterator position) = 0;
 		inline virtual iterator erase(const_iterator first, const_iterator last) = 0;
 
-		inline virtual iterator insert(const_iterator before, const_reference value) = 0; // stl
-		inline virtual void insert(size_type i, const_reference value) = 0; // qt
+		inline virtual iterator insert(const_iterator before, const T &value) = 0; // stl
+		inline virtual iterator insert(size_type i, const T &value) = 0; // qt
 		inline virtual iterator insert(const_iterator before, value_type &&value) = 0; // stl
-		inline virtual iterator insert(const_iterator before, size_type count, const_reference value) = 0; // stl
+		inline virtual iterator insert(const_iterator before, size_type count, const T &value) = 0; // stl
 		inline virtual iterator insert(const_iterator position, std::initializer_list<value_type> il) = 0; // stl
-		inline virtual void insert(size_type i, size_type count, const_reference value) = 0; // qt
+		inline virtual iterator insert(size_type i, size_type count, const T &value) = 0; // qt
 
 		inline virtual void pop_back() = 0; // stl
 		inline virtual void pop_front() = 0; // myself(-vector)
