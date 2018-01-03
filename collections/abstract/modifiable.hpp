@@ -38,8 +38,6 @@ namespace ctl {
 
 		inline virtual void clear() noexcept = 0; // stl
 
-
-
 		inline virtual iterator erase(const_iterator position) = 0;
 		inline virtual iterator erase(const_iterator first, const_iterator last) = 0;
 
