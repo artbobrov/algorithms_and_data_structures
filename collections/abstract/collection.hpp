@@ -217,7 +217,6 @@ namespace ctl {
 	collection<typename collection<T, Allocator>::value_type> &collection<T,
 	                                                                      Allocator>::subsequence(const_iterator from,
 	                                                                                              const_iterator to) {
-		//		collection<value_type, allocator_type> other(from, to);
 		_NOT_IMPLEMENTED_;
 		return *this;
 	}
