@@ -66,18 +66,18 @@ namespace ctl {
 		inline virtual void remove_all(const_reference item); // qt 
 		inline virtual void remove_at(int i); // qt 
 		inline virtual void remove(const_reference item); // qt 
-		inline reverse_iterator rbegin() noexcept override; // 
-		inline const_reverse_iterator rbegin() const noexcept override; // 
-		inline reverse_iterator rend() noexcept override; // 
-		inline const_reverse_iterator rend() const noexcept override; // 
+		inline reverse_iterator rbegin() noexcept override; // stl
+		inline const_reverse_iterator rbegin() const noexcept override; // stl
+		inline reverse_iterator rend() noexcept override; // stl
+		inline const_reverse_iterator rend() const noexcept override; // stl
 
 		inline virtual std::vector<value_type, allocator_type> to_std_vector() const noexcept; // qt 
 		inline virtual std::list<value_type, allocator_type> to_std_list() const noexcept; // c# 
 		inline virtual std::set<value_type> to_std_set() const noexcept; // c# 
 		inline bool true_for_all(conformer conform); // c#
 
-		inline virtual collection<value_type, allocator_type> &subsequence(const_iterator from, const_iterator to) = 0;
-		inline virtual collection<value_type, allocator_type> &subsequence(size_type from, size_type to) = 0;
+		inline virtual collection<value_type, allocator_type> &subsequence(const_iterator from, const_iterator to) = 0; // swift
+		inline virtual collection<value_type, allocator_type> &subsequence(size_type from, size_type to) = 0; // swift
 	protected:
 		allocator_type _allocator;
 	};

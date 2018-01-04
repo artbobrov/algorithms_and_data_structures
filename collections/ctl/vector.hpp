@@ -94,7 +94,7 @@ namespace ctl {
 		inline void shrink_to_fit() noexcept override;
 
 		inline collection<value_type, allocator_type> &subsequence(const_iterator from, const_iterator to) override;
-		inline virtual collection<value_type, allocator_type> &subsequence(size_type from, size_type to) override;
+		inline collection<value_type, allocator_type> &subsequence(size_type from, size_type to) override;
 	protected:
 		iterator _begin;
 		iterator _end;
@@ -103,6 +103,7 @@ namespace ctl {
 		inline iterator _copy_data(iterator begin, iterator end, iterator to); // returns end iterator to copied data
 		inline size_type _recommend(size_type new_size);
 	};
+
 	template<class T, class Allocator>
 	vector<T, Allocator>::vector(const Allocator &alloc): vector() {
 		this->_allocator = alloc;

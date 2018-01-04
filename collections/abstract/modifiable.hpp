@@ -51,11 +51,11 @@ namespace ctl {
 		inline virtual iterator insert(size_type i, size_type count, const T &value) = 0; // qt
 
 		inline virtual void pop_back() = 0; // stl
-		inline virtual void pop_front() = 0; // myself(-vector)
+		inline virtual void pop_front() = 0; // qt
 		inline virtual void push_back(const_reference value) = 0; // stl
 		inline virtual void push_back(value_type &&value) = 0; // stl
-		inline virtual void push_front(const_reference value) = 0; // myself(-vector)
-		inline virtual void push_front(value_type &&value) = 0; // myself(-vector)
+		inline virtual void push_front(const_reference value) = 0; // qt
+		inline virtual void push_front(value_type &&value) = 0; // qt
 
 		inline virtual void resize(size_type count) = 0; // stl
 		inline virtual void resize(size_type count, const T &value) = 0; // stl
