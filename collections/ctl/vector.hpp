@@ -29,12 +29,12 @@ namespace ctl {
 		inline vector() noexcept : _begin(nullptr), _end(nullptr), _storage_end(nullptr) {}
 		inline explicit vector(const Allocator &alloc);
 		inline explicit vector(size_type count, const Allocator &alloc = Allocator());
-		inline vector(size_type count, const T &value = T(), const Allocator &alloc = Allocator());
+		inline explicit vector(size_type count, const T &value = T(), const Allocator &alloc = Allocator());
+		inline explicit vector(iterator begin, iterator end, const Allocator &alloc = Allocator());
 		inline vector(const vector<value_type, allocator_type> &other);
 		inline explicit vector(const vector<value_type, allocator_type> &other, const Allocator &alloc);
 		inline vector(vector &&other) noexcept;
-		inline vector(std::initializer_list<value_type> il,
-		              const Allocator &alloc = Allocator());
+		inline vector(std::initializer_list<value_type> il, const Allocator &alloc = Allocator());
 
 		inline virtual ~vector();
 	public:
@@ -91,6 +91,9 @@ namespace ctl {
 		inline explicit operator std::string() const noexcept override;
 		inline size_type size() const noexcept override;
 		inline void shrink_to_fit() noexcept override;
+
+		inline collection<value_type, allocator_type> &subsequence(const_iterator from, const_iterator to) override;
+		inline virtual collection<value_type, allocator_type> &subsequence(size_type from, size_type to) override;
 	protected:
 		iterator _begin;
 		iterator _end;
@@ -104,16 +107,23 @@ namespace ctl {
 		this->_allocator = alloc;
 	}
 	template<class T, class Allocator>
-	vector<T, Allocator>::vector(vector::size_type count, const Allocator &alloc): vector(alloc) {
+	vector<T, Allocator>::vector(size_type count, const Allocator &alloc): vector(alloc) {
 		_begin = this->_allocator.allocate(count);
 		_storage_end = _end = _begin + count;
 	}
 
 	template<class T, class Allocator>
-	vector<T, Allocator>::vector(vector::size_type count, const T &value, const Allocator &alloc): vector(count,
-	                                                                                                      alloc) {
+	vector<T, Allocator>::vector(size_type count, const T &value, const Allocator &alloc): vector(count, alloc) {
 		this->fill(value);
 	}
+
+	template<class T, class Allocator>
+	vector<T, Allocator>::vector(iterator begin, iterator end, const Allocator &alloc): vector(end - begin, alloc) {
+		const_iterator start = begin;
+		for (; begin != end; ++begin)
+			this->_allocator.construct(_begin + static_cast<size_type>(begin - start), *begin);
+	}
+
 	template<class T, class Allocator>
 	vector<T, Allocator>::vector(const vector<value_type, allocator_type> &other): vector(other._allocator) {
 		_begin = this->_allocator.allocate(other.capacity());
@@ -141,7 +151,7 @@ namespace ctl {
 	void vector<T, Allocator>::_delete_data(iterator from, iterator to) {
 
 		iterator _start = from;
-		size_type _sz = static_cast<size_type>(to - from);
+		size_type _sz = to - from;
 		for (; from != to; ++from)
 			this->_allocator.destroy(from);
 		if (this->capacity() && this->begin() != nullptr)
@@ -150,7 +160,7 @@ namespace ctl {
 	template<class T, class Allocator>
 	vector<T, Allocator>::vector(std::initializer_list<value_type> il, const Allocator &alloc): vector(il.size(),
 	                                                                                                   alloc) {
-		for (const T*it = il.begin(); it != il.end(); ++it)
+		for (const T *it = il.begin(); it != il.end(); ++it)
 			this->_allocator.construct(_begin + static_cast<size_type >(it - il.begin()), *it);
 
 	}
@@ -265,7 +275,7 @@ namespace ctl {
 		if (first < begin() || first > end() || last < begin() || last > end())
 			throw std::invalid_argument("invalid slice; slice should be in vector; erase(const_iterator,const_iterator)");
 		size_type __capacity = capacity();
-		size_type __count = static_cast<size_type>(last - first);
+		size_type __count = last - first;
 		iterator _start = this->_allocator.allocate(__capacity);
 		iterator middle = _copy_data(_begin, first, _start);
 		_end = _copy_data(_begin + static_cast<size_type>(first - _begin) + __count, _end, middle);
@@ -289,28 +299,27 @@ namespace ctl {
 		return *_begin;
 	}
 	template<class T, class Allocator>
-	vector<typename vector<T, Allocator>::value_type, typename vector<T, Allocator>::allocator_type> &vector<T,
-	                                                                                                         Allocator>::filled(
+	vector<typename vector<T, Allocator>::value_type, typename vector<T, Allocator>::allocator_type> &
+	vector<T, Allocator>::filled(
 		const T &value) {
 		// TODO: IS WITH THE ONLY WAY?
-		vector<value_type, allocator_type> *other = new vector<value_type, allocator_type>(*this);
+		auto *other = new vector<value_type, allocator_type>(*this);
 		other->fill(value);
 		return *other;
 	}
 	template<class T, class Allocator>
-	vector<typename vector<T, Allocator>::value_type, typename vector<T, Allocator>::allocator_type> &vector<T,
-	                                                                                                         Allocator>::filled(
+	vector<typename vector<T, Allocator>::value_type, typename vector<T, Allocator>::allocator_type> &
+	vector<T, Allocator>::filled(
 		const T &value,
 		size_type size) {
 		// TODO: IS WITH THE ONLY WAY?
-		vector<value_type, allocator_type> *other = new vector<value_type, allocator_type>(*this);
+		auto *other = new vector<value_type, allocator_type>(*this);
 		other->fill(value, size);
 		return *other;
 	}
 
 	template<class T, class allocator>
 	typename vector<T, allocator>::iterator vector<T, allocator>::insert(size_type idx, const T &value) {
-
 		return insert(_begin + idx, value);
 	}
 
@@ -324,6 +333,11 @@ namespace ctl {
 	typename vector<T, allocator>::iterator vector<T, allocator>::insert(const_iterator position,
 	                                                                     size_type count,
 	                                                                     const T &value) {
+
+
+
+
+
 		size_type __capacity = _recommend(std::max(size() + count, static_cast<size_type>(position - _begin + count)));
 		iterator _start = this->_allocator.allocate(__capacity);
 		iterator middle = _copy_data(_begin, std::min(_end, position), _start);
@@ -410,7 +424,7 @@ namespace ctl {
 	}
 	template<class T, class allocator>
 	void vector<T, allocator>::push_back(const_reference value) {
-		if (size() == capacity()) {
+		if (size() + 1 > capacity()) {
 			size_type __capacity = _recommend(size() + 1);
 			iterator _start = this->_allocator.allocate(__capacity, _begin);
 
@@ -425,7 +439,7 @@ namespace ctl {
 	}
 	template<class T, class allocator>
 	void vector<T, allocator>::push_back(value_type &&value) {
-		if (size() == capacity()) {
+		if (size() + 1 > capacity()) {
 			size_type __capacity = _recommend(size() + 1);
 			iterator _start = this->_allocator.allocate(__capacity, _begin);
 
@@ -492,19 +506,18 @@ namespace ctl {
 		_storage_end = _begin + n;
 	}
 	template<class T, class Allocator>
-	vector<typename vector<T, Allocator>::value_type,
-	       typename vector<T, Allocator>::allocator_type> &vector<T, Allocator>::reversed() {
-		// TODO: IS WITH THE ONLY WAY? //		_NOT_IMPLEMENTED_;
-		vector<value_type, allocator_type> *other = new vector<value_type, allocator_type>(*this);
+	vector<typename vector<T, Allocator>::value_type, typename vector<T, Allocator>::allocator_type> &
+	vector<T, Allocator>::reversed() {
+		// TODO: IS WITH THE ONLY WAY?
+		auto *other = new vector<value_type, allocator_type>(*this);
 		other->reverse();
 		return *other;
 	}
 	template<class T, class Allocator>
-	vector<typename vector<T, Allocator>::value_type,
-	       typename vector<T, Allocator>::allocator_type> &vector<T, Allocator>::reversed(iterator first,
-	                                                                                      iterator last) {
-		// TODO:  IS WITH THE ONLY WAY? //		_NOT_IMPLEMENTED_;
-		vector<value_type, allocator_type> *other = new vector<value_type, allocator_type>(*this);
+	vector<typename vector<T, Allocator>::value_type, typename vector<T, Allocator>::allocator_type> &
+	vector<T, Allocator>::reversed(iterator first, iterator last) {
+		// TODO:  IS WITH THE ONLY WAY?
+		auto *other = new vector<value_type, allocator_type>(*this);
 		other->reverse(other->begin() + static_cast<difference_type >(first - _begin ),
 		               other->begin() + static_cast<difference_type >(last - _begin));
 		return *other;
@@ -533,6 +546,18 @@ namespace ctl {
 			output += to_string(element) + " ";
 		}
 		return output;
+	}
+	template<class T, class Allocator>
+	collection<typename vector<T, Allocator>::value_type, typename vector<T, Allocator>::allocator_type> &
+	vector<T, Allocator>::subsequence(const_iterator from, const_iterator to) {
+		// TODO:  IS WITH THE ONLY WAY?
+		auto *other = new vector<value_type, allocator_type>(from, to + 1);
+		return *other;
+	}
+	template<class T, class Allocator>
+	collection<typename vector<T, Allocator>::value_type, typename vector<T, Allocator>::allocator_type> &
+	vector<T, Allocator>::subsequence(size_type from, size_type to) {
+		return subsequence(this->begin() + from, this->begin() + to);
 	}
 }
 

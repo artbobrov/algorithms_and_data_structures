@@ -70,10 +70,10 @@ namespace ctl {
 		inline virtual std::vector<value_type, allocator_type> to_std_vector() const noexcept; // qt 
 		inline virtual std::list<value_type, allocator_type> to_std_list() const noexcept; // c# 
 		inline virtual std::set<value_type> to_std_set() const noexcept; // c# 
-		inline bool true_for_all(conformer conform); // c# 
+		inline bool true_for_all(conformer conform); // c#
 
-		inline virtual collection<value_type> &subsequence(const_iterator from, const_iterator to); // 
-		inline virtual collection<value_type> &subsequence(size_type from, size_type to); // 
+		inline virtual collection<value_type, allocator_type> &subsequence(const_iterator from, const_iterator to) = 0;
+		inline virtual collection<value_type, allocator_type> &subsequence(size_type from, size_type to) = 0;
 	protected:
 		allocator_type _allocator;
 	};
@@ -213,20 +213,7 @@ namespace ctl {
 				return false;
 		return true;
 	}
-	template<class T, class Allocator>
-	collection<typename collection<T, Allocator>::value_type> &collection<T,
-	                                                                      Allocator>::subsequence(const_iterator from,
-	                                                                                              const_iterator to) {
-		_NOT_IMPLEMENTED_;
-		return *this;
-	}
-	template<class T, class Allocator>
-	collection<typename collection<T, Allocator>::value_type> &collection<T, Allocator>::subsequence(size_type from,
-	                                                                                                 size_type to) {
-		//		collection<value_type, allocator_type> other(begin() + from, begin() + to);
-		_NOT_IMPLEMENTED_;
-		return *this;
-	}
+
 }
 
 #endif //COLLECTIONS_COLLECTION_HPP
