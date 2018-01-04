@@ -33,23 +33,24 @@ namespace ctl {
 		typedef const std::reverse_iterator<iterator> const_reverse_iterator;
 		typedef iterator pointer;
 		typedef value_type &reference;
-		typedef const reference const_reference;
+		typedef value_type const &const_reference;
 		typedef size_t size_type;
 		typedef std::ptrdiff_t difference_type;
 
 		typedef std::function<bool(const_reference)> conformer;
-		typedef std::function<void(reference)> action;
+		typedef std::function<void(const_reference)> action;
+		typedef std::function<reference(reference)> map_action;
 		typedef std::function<bool(const_reference, const_reference)> comparer;
 	public:
-		inline virtual void append(const collection<value_type, allocator_type> &value) = 0; // N_I
-		inline allocator_type allocator() const noexcept; // 
+		inline allocator_type allocator() const noexcept; // stl
 
 		inline bool contains(const_reference item) const; // qt 
 		inline size_type count(const_reference item) const noexcept; // qt 
 		inline const_reverse_iterator crbegin() const noexcept override; // stl
 		inline const_reverse_iterator crend() const noexcept override; // stl
 
-		inline void foreach(action act); // c# 
+		inline void foreach(action act); // c#
+		inline virtual collection<value_type, allocator_type> &filter(conformer conform) = 0;
 		inline void fill(const T &value); // qt 
 		inline void fill(iterator first, iterator last, const T &value); // qt 
 		inline void fill(const T &value, size_type size); // qt
@@ -57,24 +58,26 @@ namespace ctl {
 		inline size_type index_of(const_reference value, size_type first, size_type last) const; // qt 
 		inline iterator index_of(const_reference value, iterator first, iterator last) const; // myself 
 
+		inline void map(map_action mapper);
+
 		inline void reverse(); // c# 
 		inline void reverse(iterator first, iterator last); // c# 
 
 		inline virtual void remove_all(const_reference item); // qt 
 		inline virtual void remove_at(int i); // qt 
 		inline virtual void remove(const_reference item); // qt 
-		inline reverse_iterator rbegin() noexcept override; // 
-		inline const_reverse_iterator rbegin() const noexcept override; // 
-		inline reverse_iterator rend() noexcept override; // 
-		inline const_reverse_iterator rend() const noexcept override; // 
+		inline reverse_iterator rbegin() noexcept override; // stl
+		inline const_reverse_iterator rbegin() const noexcept override; // stl
+		inline reverse_iterator rend() noexcept override; // stl
+		inline const_reverse_iterator rend() const noexcept override; // stl
 
 		inline virtual std::vector<value_type, allocator_type> to_std_vector() const noexcept; // qt 
 		inline virtual std::list<value_type, allocator_type> to_std_list() const noexcept; // c# 
 		inline virtual std::set<value_type> to_std_set() const noexcept; // c# 
-		inline bool true_for_all(conformer conform); // c# 
+		inline bool true_for_all(conformer conform); // c#
 
-		inline virtual collection<value_type> &subsequence(const_iterator from, const_iterator to); // 
-		inline virtual collection<value_type> &subsequence(size_type from, size_type to); // 
+		inline virtual collection<value_type, allocator_type> &subsequence(const_iterator from, const_iterator to) = 0; // swift
+		inline virtual collection<value_type, allocator_type> &subsequence(size_type from, size_type to) = 0; // swift
 	protected:
 		allocator_type _allocator;
 	};
@@ -215,20 +218,11 @@ namespace ctl {
 		return true;
 	}
 	template<class T, class Allocator>
-	collection<typename collection<T, Allocator>::value_type> &collection<T,
-	                                                                      Allocator>::subsequence(const_iterator from,
-	                                                                                              const_iterator to) {
-		//		collection<value_type, allocator_type> other(from, to);
-		_NOT_IMPLEMENTED_;
-		return *this;
+	void collection<T, Allocator>::map(map_action mapper) {
+		for (reference element: *this)
+			element = mapper(element);
 	}
-	template<class T, class Allocator>
-	collection<typename collection<T, Allocator>::value_type> &collection<T, Allocator>::subsequence(size_type from,
-	                                                                                                 size_type to) {
-		//		collection<value_type, allocator_type> other(begin() + from, begin() + to);
-		_NOT_IMPLEMENTED_;
-		return *this;
-	}
+
 }
 
 #endif //COLLECTIONS_COLLECTION_HPP

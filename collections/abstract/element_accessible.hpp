@@ -15,7 +15,7 @@ namespace ctl {
 		typedef T value_type;
 		typedef value_type *iterator;
 		typedef value_type &reference;
-		typedef const reference const_reference;
+		typedef value_type const &const_reference;
 		typedef iterator pointer;
 		typedef size_t size_type;
 	public:
