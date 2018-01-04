@@ -123,7 +123,7 @@ namespace ctl {
 	vector<T, Allocator>::vector(iterator begin, iterator end, const Allocator &alloc): vector(end - begin, alloc) {
 		const_iterator start = begin;
 		for (; begin != end; ++begin)
-			this->_allocator.construct(_begin + static_cast<size_type>(begin - start), *begin);
+			this->_allocator.construct(_begin + this->distance(begin, start), *begin);
 	}
 
 	template<class T, class Allocator>
@@ -153,7 +153,7 @@ namespace ctl {
 	void vector<T, Allocator>::_delete_data(iterator from, iterator to) {
 
 		iterator _start = from;
-		size_type _sz = to - from;
+		size_type _sz = this->distance(to, from);
 		for (; from != to; ++from)
 			this->_allocator.destroy(from);
 		if (capacity() && _begin != nullptr)
@@ -163,7 +163,7 @@ namespace ctl {
 	vector<T, Allocator>::vector(std::initializer_list<value_type> il, const Allocator &alloc): vector(il.size(),
 	                                                                                                   alloc) {
 		for (const T *it = il.begin(); it != il.end(); ++it)
-			this->_allocator.construct(_begin + static_cast<size_type >(it - il.begin()), *it);
+			this->_allocator.construct(_begin + this->distance(it, il.begin()), *it);
 
 	}
 
@@ -259,7 +259,7 @@ namespace ctl {
 		size_type __capacity = capacity();
 		iterator _start = this->_allocator.allocate(__capacity);
 		iterator middle = _copy_data(_begin, position, _start);
-		_end = _copy_data(_begin + static_cast<size_type>(position - _begin) + 1, _end, middle);
+		_end = _copy_data(_begin + this->distance(position, _begin) + 1, _end, middle);
 		_delete_data(_begin, _storage_end);
 		_begin = _start;
 		_storage_end = _begin + __capacity;
@@ -271,10 +271,10 @@ namespace ctl {
 		if (first < _begin || first > _end || last < _begin || last > end())
 			throw std::invalid_argument("invalid slice; slice should be in vector; erase(const_iterator,const_iterator)");
 		size_type __capacity = capacity();
-		size_type __count = last - first;
+		size_type __count = this->distance(last, first);
 		iterator _start = this->_allocator.allocate(__capacity);
 		iterator middle = _copy_data(_begin, first, _start);
-		_end = _copy_data(_begin + static_cast<size_type>(first - _begin) + __count, _end, middle);
+		_end = _copy_data(_begin + this->distance(first, _begin) + __count, _end, middle);
 		_delete_data(_begin, _storage_end);
 		_begin = _start;
 		_storage_end = _begin + __capacity;
@@ -332,7 +332,7 @@ namespace ctl {
 			iterator _start = this->_allocator.allocate(__capacity);
 			middle = _copy_data(_begin, std::min(_end, position), _start);
 			if (_end < position) {
-				middle += position - _end;
+				middle += this->distance(position, _end);
 				_end = middle + count;
 
 			} else {
@@ -368,11 +368,11 @@ namespace ctl {
 
 	template<class T, class allocator>
 	typename vector<T, allocator>::iterator vector<T, allocator>::insert(const_iterator position, value_type &&value) {
-		size_type __capacity = _recommend(std::max(size() + 1, static_cast<size_type>(position - _begin + 1)));
+		size_type __capacity = _recommend(std::max(size() + 1, this->distance(position, _begin) + 1));
 		iterator _start = this->_allocator.allocate(__capacity);
 		iterator middle = _copy_data(_begin, std::min(_end, position), _start);
 		if (_end < position) {
-			middle += position - _end;
+			middle += this->distance(position, _end);
 			_end = middle + 1;
 		} else
 			_end = _copy_data(position, _end, middle + 1);
@@ -396,13 +396,12 @@ namespace ctl {
 	                                                                     const T *last) {
 		iterator middle;
 		size_type count = last - first;
-		std::cout << size() + count << " " << capacity() << std::endl;
 		if (size() + count > capacity() || position - _begin + count > capacity()) {
 			size_type __capacity = _recommend(std::max(size() + count, position - _begin + count));
 			iterator _start = this->_allocator.allocate(__capacity);
 			middle = _copy_data(_begin, std::min(_end, position), _start);
 			if (_end < position) {
-				middle += static_cast<size_type>(position - _end);
+				middle += this->distance(position, _end);
 				_end = middle + count;
 
 			} else
@@ -525,8 +524,8 @@ namespace ctl {
 	vector<typename vector<T, Allocator>::value_type, typename vector<T, Allocator>::allocator_type> &
 	vector<T, Allocator>::reversed(iterator first, iterator last) {
 		auto *other = new vector<value_type, allocator_type>(*this);
-		other->reverse(other->_begin + static_cast<difference_type >(first - _begin ),
-		               other->_begin + static_cast<difference_type >(last - _begin));
+		other->reverse(other->_begin + this->distance(first, _begin),
+		               other->_begin + this->distance(last, _begin));
 		return *other;
 	}
 	template<class T, class allocator>
@@ -562,7 +561,7 @@ namespace ctl {
 	template<class T, class Allocator>
 	collection<typename vector<T, Allocator>::value_type, typename vector<T, Allocator>::allocator_type> &
 	vector<T, Allocator>::subsequence(size_type from, size_type to) {
-		return subsequence(this->_begin + from, this->_begin + to);
+		return subsequence(_begin + from, _begin + to);
 	}
 	template<class T, class Allocator>
 	collection<typename vector<T, Allocator>::value_type, typename vector<T, Allocator>::allocator_type> &
