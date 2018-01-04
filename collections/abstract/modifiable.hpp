@@ -24,7 +24,7 @@ namespace ctl {
 		typedef const std::reverse_iterator<iterator> const_reverse_iterator;
 		typedef iterator pointer;
 		typedef value_type &reference;
-		typedef const reference const_reference;
+		typedef value_type const &const_reference;
 		typedef size_t size_type;
 		typedef std::ptrdiff_t difference_type;
 

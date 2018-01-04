@@ -33,12 +33,13 @@ namespace ctl {
 		typedef const std::reverse_iterator<iterator> const_reverse_iterator;
 		typedef iterator pointer;
 		typedef value_type &reference;
-		typedef const reference const_reference;
+		typedef value_type const &const_reference;
 		typedef size_t size_type;
 		typedef std::ptrdiff_t difference_type;
 
 		typedef std::function<bool(const_reference)> conformer;
-		typedef std::function<void(reference)> action;
+		typedef std::function<void(const_reference)> action;
+		typedef std::function<reference(reference)> map_action;
 		typedef std::function<bool(const_reference, const_reference)> comparer;
 	public:
 		inline allocator_type allocator() const noexcept; // stl
@@ -48,13 +49,16 @@ namespace ctl {
 		inline const_reverse_iterator crbegin() const noexcept override; // stl
 		inline const_reverse_iterator crend() const noexcept override; // stl
 
-		inline void foreach(action act); // c# 
+		inline void foreach(action act); // c#
+		inline virtual collection<value_type, allocator_type> &filter(conformer conform) = 0;
 		inline void fill(const T &value); // qt 
 		inline void fill(iterator first, iterator last, const T &value); // qt 
 		inline void fill(const T &value, size_type size); // qt
 
 		inline size_type index_of(const_reference value, size_type first, size_type last) const; // qt 
 		inline iterator index_of(const_reference value, iterator first, iterator last) const; // myself 
+
+		inline void map(map_action mapper);
 
 		inline void reverse(); // c# 
 		inline void reverse(iterator first, iterator last); // c# 
@@ -212,6 +216,11 @@ namespace ctl {
 			if (!conform(element))
 				return false;
 		return true;
+	}
+	template<class T, class Allocator>
+	void collection<T, Allocator>::map(map_action mapper) {
+		for (reference element: *this)
+			element = mapper(element);
 	}
 
 }
