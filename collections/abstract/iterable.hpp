@@ -10,11 +10,11 @@
 
 namespace ctl {
 
-	template<class T>
+	template<class T, class Iterator>
 	class iterable {
 	public:
 		typedef T value_type;
-		typedef value_type *iterator;
+		typedef Iterator iterator;
 		typedef const iterator const_iterator;
 		typedef std::reverse_iterator<iterator> reverse_iterator;
 		typedef const std::reverse_iterator<iterator> const_reverse_iterator;
@@ -38,8 +38,8 @@ namespace ctl {
 		inline virtual reverse_iterator rend() noexcept = 0; // stl
 		inline virtual const_reverse_iterator rend() const noexcept = 0; // stl
 	};
-	template<class T>
-	typename iterable<T>::size_type iterable<T>::distance(const_iterator first, const_iterator last) {
+	template<class T, class Iterator>
+	typename iterable<T, Iterator>::size_type iterable<T, Iterator>::distance(const_iterator first, const_iterator last) {
 		return static_cast<size_type>(first - last);
 	}
 }

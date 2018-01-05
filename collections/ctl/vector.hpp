@@ -8,7 +8,7 @@
 
 namespace ctl {
 	template<class T, class Allocator = std::allocator<T> >
-	class vector : public collection<T, Allocator> {
+	class vector : public collection<T, T *, Allocator> {
 	public:
 		typedef Allocator allocator_type;
 		typedef T value_type;
@@ -40,7 +40,7 @@ namespace ctl {
 	public:
 		inline reference at(size_type i) override;
 		inline const_reference at(size_type i) const override;
-		inline void append(const collection<value_type, allocator_type> &value) override;
+		inline void append(const collection<value_type, iterator, allocator_type> &value) override;
 
 		inline reference back() override;
 		inline const_reference back() const override;
@@ -63,7 +63,7 @@ namespace ctl {
 
 		inline reference front() override;
 		inline const_reference front() const override;
-		collection<T, Allocator> &filter(conformer conform) override;
+		collection<value_type, iterator, Allocator> &filter(conformer conform) override;
 		inline vector<value_type, allocator_type> &filled(const T &value);
 		inline vector<value_type, allocator_type> &filled(const T &value, size_type size);
 
@@ -93,8 +93,9 @@ namespace ctl {
 		inline size_type size() const noexcept override;
 		inline void shrink_to_fit() noexcept override;
 
-		inline collection<value_type, allocator_type> &subsequence(const_iterator from, const_iterator to) override;
-		inline collection<value_type, allocator_type> &subsequence(size_type from, size_type to) override;
+		inline collection<value_type, iterator, allocator_type> &subsequence(const_iterator from,
+		                                                                     const_iterator to) override;
+		inline collection<value_type, iterator, allocator_type> &subsequence(size_type from, size_type to) override;
 	protected:
 		iterator _begin;
 		iterator _end;
@@ -194,7 +195,7 @@ namespace ctl {
 		return *(_begin + i);
 	}
 	template<class T, class Allocator>
-	void vector<T, Allocator>::append(const collection<value_type, allocator_type> &value) {
+	void vector<T, Allocator>::append(const collection<value_type, iterator, allocator_type> &value) {
 		if (size() + value.size() > capacity()) {
 			size_type __capacity = _recommend(size() + value.size());
 			reserve(__capacity);
@@ -553,18 +554,24 @@ namespace ctl {
 		return output;
 	}
 	template<class T, class Allocator>
-	collection<typename vector<T, Allocator>::value_type, typename vector<T, Allocator>::allocator_type> &
+	collection<typename vector<T, Allocator>::value_type,
+	           typename vector<T, Allocator>::iterator,
+	           typename vector<T, Allocator>::allocator_type> &
 	vector<T, Allocator>::subsequence(const_iterator from, const_iterator to) {
 		auto *other = new vector<value_type, allocator_type>(from, to + 1);
 		return *other;
 	}
 	template<class T, class Allocator>
-	collection<typename vector<T, Allocator>::value_type, typename vector<T, Allocator>::allocator_type> &
+	collection<typename vector<T, Allocator>::value_type,
+	           typename vector<T, Allocator>::iterator,
+	           typename vector<T, Allocator>::allocator_type> &
 	vector<T, Allocator>::subsequence(size_type from, size_type to) {
 		return subsequence(_begin + from, _begin + to);
 	}
 	template<class T, class Allocator>
-	collection<typename vector<T, Allocator>::value_type, typename vector<T, Allocator>::allocator_type> &
+	collection<typename vector<T, Allocator>::value_type,
+	           typename vector<T, Allocator>::iterator,
+	           typename vector<T, Allocator>::allocator_type> &
 	vector<T, Allocator>::filter(conformer conform) {
 		auto *other = new vector<value_type, allocator_type>(size(), this->allocator());
 		for (const_reference element: *this)
