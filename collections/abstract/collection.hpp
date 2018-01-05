@@ -42,6 +42,8 @@ namespace ctl {
 		typedef std::function<reference(reference)> map_action;
 		typedef std::function<bool(const_reference, const_reference)> comparer;
 	public:
+		explicit collection(const Allocator &alloc = Allocator()): _allocator(alloc) {}
+	public:
 		inline allocator_type allocator() const noexcept; // stl
 
 		inline bool contains(const_reference item) const; // qt 
@@ -77,8 +79,9 @@ namespace ctl {
 		inline bool true_for_all(conformer conform); // c#
 
 		inline virtual collection<value_type, iterator, allocator_type> &subsequence(const_iterator from,
-		                                                                   const_iterator to) = 0; // swift
-		inline virtual collection<value_type, iterator, allocator_type> &subsequence(size_type from, size_type to) = 0; // swift
+		                                                                             const_iterator to) = 0; // swift
+		inline virtual collection<value_type, iterator, allocator_type> &subsequence(size_type from,
+		                                                                             size_type to) = 0; // swift
 	protected:
 		allocator_type _allocator;
 	};

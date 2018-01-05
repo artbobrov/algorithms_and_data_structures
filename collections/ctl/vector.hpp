@@ -106,11 +106,11 @@ namespace ctl {
 	};
 
 	template<class T, class Allocator>
-	vector<T, Allocator>::vector(const Allocator &alloc): vector() {
-		this->_allocator = alloc;
+	vector<T, Allocator>::vector(const Allocator &alloc): collection<value_type, iterator, allocator_type>(alloc) {
 	}
 	template<class T, class Allocator>
-	vector<T, Allocator>::vector(size_type count, const Allocator &alloc): vector(alloc) {
+	vector<T, Allocator>::vector(size_type count, const Allocator &alloc):
+		collection<value_type, iterator, allocator_type>(alloc) {
 		_end = _begin = this->_allocator.allocate(count);
 		_storage_end = _begin + count;
 	}
@@ -128,15 +128,15 @@ namespace ctl {
 	}
 
 	template<class T, class Allocator>
-	vector<T, Allocator>::vector(const vector<value_type, allocator_type> &other): vector(other._allocator) {
+	vector<T, Allocator>::vector(const vector<value_type, allocator_type> &other):
+		collection<value_type, iterator, allocator_type>(other._allocator) {
 		_begin = this->_allocator.allocate(other.capacity());
 		_end = _copy_data(other.begin(), other.end(), _begin);
 		_storage_end = _begin + other.capacity();
 	}
 	template<class T, class Allocator>
 	vector<T, Allocator>::vector(const vector<value_type, allocator_type> &other, const Allocator &alloc)
-		:vector(other) {
-		this->_allocator = alloc;
+		:collection<value_type, iterator, allocator_type>(alloc), vector(other) {
 	}
 	template<class T, class Allocator>
 	vector<T, Allocator>::vector(vector &&other) noexcept: vector(other._allocator) {
