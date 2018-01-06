@@ -296,6 +296,18 @@ namespace ctl {
 		return *_begin;
 	}
 	template<class T, class Allocator>
+	collection<typename vector<T, Allocator>::value_type,
+	           typename vector<T, Allocator>::iterator,
+	           typename vector<T, Allocator>::allocator_type> &
+	vector<T, Allocator>::filter(conformer conform) {
+		auto *other = new vector<value_type, allocator_type>(size(), this->allocator());
+		for (const_reference element: *this)
+			if (conform(element))
+				other->push_back(element);
+		return *other;
+	}
+
+	template<class T, class Allocator>
 	vector<typename vector<T, Allocator>::value_type, typename vector<T, Allocator>::allocator_type> &
 	vector<T, Allocator>::filled(
 		const T &value) {
@@ -568,17 +580,7 @@ namespace ctl {
 	vector<T, Allocator>::subsequence(size_type from, size_type to) {
 		return subsequence(_begin + from, _begin + to);
 	}
-	template<class T, class Allocator>
-	collection<typename vector<T, Allocator>::value_type,
-	           typename vector<T, Allocator>::iterator,
-	           typename vector<T, Allocator>::allocator_type> &
-	vector<T, Allocator>::filter(conformer conform) {
-		auto *other = new vector<value_type, allocator_type>(size(), this->allocator());
-		for (const_reference element: *this)
-			if (conform(element))
-				other->push_back(element);
-		return *other;
-	}
+
 }
 
 #endif //COLLECTIONS_VECTOR_HPP

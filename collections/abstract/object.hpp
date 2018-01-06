@@ -8,6 +8,8 @@
 #include <iostream>
 #include <string>
 
+#define _NOT_IMPLEMENTED_ throw std::logic_error("Function not yet implemented")
+
 namespace ctl {
 	class object {
 	public:

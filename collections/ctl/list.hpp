@@ -6,6 +6,7 @@
 #define COLLECTIONS_LIST_HPP
 
 #include "../abstract/collection.hpp"
+#include "../abstract/iterator.hpp"
 #include <iterator>
 
 namespace ctl {
@@ -26,16 +27,21 @@ namespace ctl {
 			}
 		};
 
-		struct __list_iterator : public std::iterator<std::bidirectional_iterator_tag, T> {
+		struct __list_iterator : public __iterator<std::bidirectional_iterator_tag, T> {
 		public:
+			typedef T value_type;
+			typedef value_type &reference;
+			typedef value_type const &const_reference;
+
 			typedef __node node;
 			typedef node *node_point;
+			typedef size_t size_type;
 		public:
 			node_point data_point;
 		public:
 			explicit __list_iterator(node_point point = nullptr) : data_point(point) {}
 
-			inline __list_iterator &operator++() {
+			inline __list_iterator &operator++() override {
 				data_point = data_point->next;
 				return *this;
 			}
@@ -44,7 +50,7 @@ namespace ctl {
 				++*this;
 				return value;
 			}
-			inline __list_iterator &operator--() {
+			inline __list_iterator &operator--() override {
 				data_point = data_point->prev;
 				return *this;
 			}
@@ -53,16 +59,34 @@ namespace ctl {
 				--*this;
 				return value;
 			}
-			inline T &operator*() { return data_point->data; }
-			inline T *operator->() { return &(operator*()); }
+			inline T &operator*() override { return data_point->data; }
+			inline T *operator->() override { return &(operator*()); }
 
-			inline friend bool operator==(const __list_iterator &lhs, const __list_iterator &rhs) {
-				return lhs.data_point == rhs.data_point;
+			inline bool operator==(const __list_iterator &rhs) override {
+				return this->data_point == rhs.data_point;
 			}
 
-			inline friend bool operator!=(const __list_iterator &lhs, const __list_iterator &rhs) {
-				return !(lhs == rhs);
-			};
+			inline __list_iterator &plus(size_type idx) override {
+				for (; idx > 0; --idx)
+					++*this;
+				return *this;
+			}
+			inline __list_iterator &minus(size_type idx) override {
+				for (; idx > 0; --idx)
+					--*this;
+				return *this;
+			}
+
+			inline __list_iterator operator+(size_type idx) {
+				__list_iterator value = *this;
+				value.plus(idx);
+				return value;
+			}
+			inline __list_iterator operator-(size_type idx) {
+				__list_iterator value = *this;
+				value.minus(idx);
+				return value;
+			}
 		};
 	public:
 		typedef Allocator allocator_type;
@@ -157,11 +181,13 @@ namespace ctl {
 	};
 
 	template<class T, class Allocator>
-	list<T, Allocator>::list(const Allocator &alloc): collection<value_type, iterator, allocator_type>(alloc) {
+	list<T, Allocator>::list(const Allocator &alloc):
+		collection<value_type, iterator, allocator_type>(alloc), _head(iterator()), _tail(iterator()), _size(0) {
 	}
 	template<class T, class Allocator>
 	list<T, Allocator>::list(size_type count, const Allocator &alloc):
-		collection<value_type, iterator, allocator_type>(alloc) {
+		collection<value_type, iterator, allocator_type>(alloc), _size(count) {
+		this->reserve(count);
 	}
 
 	template<class T, class Allocator>
@@ -172,7 +198,7 @@ namespace ctl {
 	template<class T, class Allocator>
 	list<T, Allocator>::list(const list<value_type, allocator_type> &other):
 		collection<value_type, iterator, allocator_type>(other.allocator()) {
-		//
+		_NOT_IMPLEMENTED_;
 	}
 	template<class T, class Allocator>
 	list<T, Allocator>::list(const list<value_type, allocator_type> &other, const Allocator &alloc)
@@ -181,78 +207,120 @@ namespace ctl {
 	}
 	template<class T, class Allocator>
 	list<T, Allocator>::list(list &&other, const Allocator &alloc) noexcept:
-		list(alloc), _size(other.size()) {
+		list(other.size(), alloc) {
+		_NOT_IMPLEMENTED_;
 	}
 
 	template<class T, class Allocator>
 	list<T, Allocator>::~list() {
+		_NOT_IMPLEMENTED_;
+
 	}
 	template<class T, class Allocator>
 	list<T, Allocator>::list(std::initializer_list<value_type> il, const Allocator &alloc): list(il.size(),
 	                                                                                             alloc) {
+		_NOT_IMPLEMENTED_;
 	}
 	template<class T, class Allocator>
 	typename list<T, Allocator>::reference list<T, Allocator>::at(size_type i) {
+		iterator value = begin();
+		for (; i > 0; --i)
+			++value;
+		return *value;
 	}
 	template<class T, class Allocator>
 	typename list<T, Allocator>::const_reference list<T, Allocator>::at(size_type i) const {
+		iterator value = begin();
+		for (; i > 0; --i)
+			++value;
+		return *value;
 	}
 	template<class T, class Allocator>
 	void list<T, Allocator>::append(const collection<value_type, iterator, allocator_type> &value) {
+		_NOT_IMPLEMENTED_;
 	}
 	template<class T, class Allocator>
 	typename list<T, Allocator>::reference list<T, Allocator>::back() {
+		return *(_tail - 1);
 	}
 	template<class T, class Allocator>
 	typename list<T, Allocator>::const_reference list<T, Allocator>::back() const {
+		return *(_tail - 1);
 	}
 	template<class T, class Allocator>
 	typename list<T, Allocator>::iterator list<T, Allocator>::begin() noexcept {
+		return _head;
 	}
 	template<class T, class Allocator>
 	typename list<T, Allocator>::const_iterator list<T, Allocator>::begin() const noexcept {
+		return _head;
 	}
 	template<class T, class Allocator>
 	typename list<T, Allocator>::const_iterator list<T, Allocator>::cbegin() const noexcept {
+		return _head;
 	}
 	template<class T, class Allocator>
 	typename list<T, Allocator>::const_iterator list<T, Allocator>::cend() const noexcept {
+		return _tail;
 	}
 	template<class T, class Allocator>
 	void list<T, Allocator>::clear() noexcept {
+		_NOT_IMPLEMENTED_;
 	}
 	template<class T, class Allocator>
 	typename list<T, Allocator>::size_type list<T, Allocator>::capacity() const noexcept {
+		return _size;
 	}
 	template<class T, class Allocator>
 	typename list<T, Allocator>::pointer list<T, Allocator>::data() noexcept {
+		_NOT_IMPLEMENTED_;
 	}
 	template<class T, class Allocator>
 	const typename list<T, Allocator>::pointer list<T, Allocator>::data() const noexcept {
+		_NOT_IMPLEMENTED_;
 	}
 	template<class T, class Allocator>
 	typename list<T, Allocator>::iterator list<T, Allocator>::end() noexcept {
+		return _tail;
 	}
 	template<class T, class Allocator>
 	typename list<T, Allocator>::const_iterator list<T, Allocator>::end() const noexcept {
+		return _tail;
 	}
 	template<class T, class Allocator>
 	typename list<T, Allocator>::iterator list<T, Allocator>::erase(const_iterator position) {
+		_NOT_IMPLEMENTED_;
 	}
 	template<class T, class Allocator>
 	typename list<T, Allocator>::iterator list<T, Allocator>::erase(const_iterator first,
 	                                                                const_iterator last) {
+		_NOT_IMPLEMENTED_;
 	}
 	template<class T, class Allocator>
 	bool list<T, Allocator>::empty() const noexcept {
+		return _tail == _head;
 	}
 
 	template<class T, class Allocator>
 	typename list<T, Allocator>::reference list<T, Allocator>::front() {
+		return *_head;
 	}
 	template<class T, class Allocator>
 	typename list<T, Allocator>::const_reference list<T, Allocator>::front() const {
+		return *_head;
 	}
+	template<class T, class Allocator>
+	collection<typename list<T, Allocator>::value_type,
+	           typename list<T, Allocator>::iterator,
+	           typename list<T, Allocator>::allocator_type> &
+	list<T, Allocator>::filter(conformer conform) {
+		auto *other = new list<value_type, allocator_type>(size(), this->allocator());
+		for (const_reference element: *this)
+			if (conform(element))
+				other->push_back(element);
+		return *other;
+	}
+
 	template<class T, class Allocator>
 	list<typename list<T, Allocator>::value_type, typename list<T, Allocator>::allocator_type> &
 	list<T, Allocator>::filled(const T &value) {
@@ -270,61 +338,72 @@ namespace ctl {
 	}
 	template<class T, class allocator>
 	typename list<T, allocator>::iterator list<T, allocator>::insert(size_type idx, const T &value) {
+		_NOT_IMPLEMENTED_;
 	}
 
 	template<class T, class allocator>
 	typename list<T, allocator>::iterator list<T, allocator>::insert(size_type idx,
 	                                                                 size_type count,
 	                                                                 const T &value) {
+		_NOT_IMPLEMENTED_;
 	}
 
 	template<class T, class allocator>
 	typename list<T, allocator>::iterator list<T, allocator>::insert(const_iterator position,
 	                                                                 size_type count,
 	                                                                 const T &value) {
-
+		_NOT_IMPLEMENTED_;
 	}
 
 	template<class T, class allocator>
 	typename list<T, allocator>::iterator list<T, allocator>::insert(const_iterator position, const T &value) {
+		_NOT_IMPLEMENTED_;
 	}
 
 	template<class T, class allocator>
 	typename list<T, allocator>::iterator list<T, allocator>::insert(const_iterator position, value_type &&value) {
+		_NOT_IMPLEMENTED_;
 
 	}
 
 	template<class T, class allocator>
 	typename list<T, allocator>::iterator list<T, allocator>::insert(const_iterator position,
 	                                                                 std::initializer_list<value_type> il) {
+		_NOT_IMPLEMENTED_;
 	}
 
 	template<class T, class Allocator>
 	typename list<T, Allocator>::iterator list<T, Allocator>::insert(const_iterator position,
 	                                                                 const_iterator first,
 	                                                                 const_iterator last) {
-
+		_NOT_IMPLEMENTED_;
 	}
 	template<class T, class allocator>
 	void list<T, allocator>::pop_back() {
+		_NOT_IMPLEMENTED_;
 	}
 
 	template<class T, class allocator>
 	void list<T, allocator>::pop_front() {
+		_NOT_IMPLEMENTED_;
 	}
 	template<class T, class allocator>
 	void list<T, allocator>::push_back(const_reference value) {
+		_NOT_IMPLEMENTED_;
 	}
 	template<class T, class allocator>
 	void list<T, allocator>::push_back(value_type &&value) {
+		_NOT_IMPLEMENTED_;
 	}
 
 	template<class T, class allocator>
 	void list<T, allocator>::push_front(const_reference value) {
+		_NOT_IMPLEMENTED_;
 	}
 
 	template<class T, class allocator>
 	void list<T, allocator>::push_front(value_type &&value) {
+		_NOT_IMPLEMENTED_;
 	}
 	template<class T, class allocator>
 	void list<T, allocator>::resize(size_type sz) {
@@ -336,9 +415,11 @@ namespace ctl {
 
 	template<class T, class allocator>
 	void list<T, allocator>::resize(size_type sz, const T &value) {
+		_NOT_IMPLEMENTED_;
 	}
 	template<class T, class allocator>
 	void list<T, allocator>::reserve(size_type n) {
+		_NOT_IMPLEMENTED_;
 	}
 	template<class T, class Allocator>
 	list<typename list<T, Allocator>::value_type, typename list<T, Allocator>::allocator_type> &
@@ -351,21 +432,21 @@ namespace ctl {
 	list<typename list<T, Allocator>::value_type, typename list<T, Allocator>::allocator_type> &
 	list<T, Allocator>::reversed(iterator first, iterator last) {
 		auto *other = new list<value_type, allocator_type>(*this);
-		//		other->reverse(other->_begin + this->distance(first, _begin),
-		//		               other->_begin + this->distance(last, _begin));
+		other->reverse(other->_head + this->distance(first, _head),
+		               other->_head + this->distance(last, _head));
 		return *other;
 	}
 	template<class T, class allocator>
 	void list<T, allocator>::shrink_to_fit() noexcept {
-		if (size() < capacity())
-			resize(size());
 	}
 	template<class T, class allocator>
 	void list<T, allocator>::swap(list<value_type, allocator_type> &other) noexcept {
 		using std::swap;
+		_NOT_IMPLEMENTED_;
 	}
 	template<class T, class Allocator>
 	typename list<T, Allocator>::size_type list<T, Allocator>::size() const noexcept {
+		return _size;
 	}
 	template<class T, class allocator>
 	list<T, allocator>::operator std::string() const noexcept {
@@ -380,23 +461,14 @@ namespace ctl {
 	           typename list<T, Allocator>::iterator,
 	           typename list<T, Allocator>::allocator_type> &
 	list<T, Allocator>::subsequence(const_iterator from, const_iterator to) {
+		_NOT_IMPLEMENTED_;
 	}
 	template<class T, class Allocator>
 	collection<typename list<T, Allocator>::value_type,
 	           typename list<T, Allocator>::iterator,
 	           typename list<T, Allocator>::allocator_type> &
 	list<T, Allocator>::subsequence(size_type from, size_type to) {
-	}
-	template<class T, class Allocator>
-	collection<typename list<T, Allocator>::value_type,
-	           typename list<T, Allocator>::iterator,
-	           typename list<T, Allocator>::allocator_type> &
-	list<T, Allocator>::filter(conformer conform) {
-		auto *other = new list<value_type, allocator_type>(size(), this->allocator());
-		for (const_reference element: *this)
-			if (conform(element))
-				other->push_back(element);
-		return *other;
+		_NOT_IMPLEMENTED_;
 	}
 }
 
