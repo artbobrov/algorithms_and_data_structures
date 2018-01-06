@@ -16,7 +16,7 @@ namespace ctl {
 		typedef Iterator iterator;
 		typedef value_type &reference;
 		typedef value_type const &const_reference;
-		typedef iterator pointer;
+		typedef T *pointer;
 		typedef size_t size_type;
 	public:
 		inline virtual reference at(size_type i) = 0; // stl
