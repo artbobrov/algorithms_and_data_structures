@@ -31,7 +31,7 @@ namespace ctl {
 		typedef const iterator const_iterator;
 		typedef std::reverse_iterator<iterator> reverse_iterator;
 		typedef const std::reverse_iterator<iterator> const_reverse_iterator;
-		typedef iterator pointer;
+		typedef T *pointer;
 		typedef value_type &reference;
 		typedef value_type const &const_reference;
 		typedef size_t size_type;
@@ -42,7 +42,7 @@ namespace ctl {
 		typedef std::function<reference(reference)> map_action;
 		typedef std::function<bool(const_reference, const_reference)> comparer;
 	public:
-		explicit collection(const Allocator &alloc = Allocator()): _allocator(alloc) {}
+		explicit collection(const Allocator &alloc = Allocator()) : _allocator(alloc) {}
 	public:
 		inline allocator_type allocator() const noexcept; // stl
 
@@ -73,8 +73,8 @@ namespace ctl {
 		inline reverse_iterator rend() noexcept override; // stl
 		inline const_reverse_iterator rend() const noexcept override; // stl
 
-		inline virtual std::vector<value_type, allocator_type> to_std_vector() const noexcept; // qt 
-		inline virtual std::list<value_type, allocator_type> to_std_list() const noexcept; // c# 
+		inline virtual std::vector<value_type> to_std_vector() const noexcept; // qt
+		inline virtual std::list<value_type> to_std_list() const noexcept; // c#
 		inline virtual std::set<value_type> to_std_set() const noexcept; // c# 
 		inline bool true_for_all(conformer conform); // c#
 
@@ -204,16 +204,14 @@ namespace ctl {
 	}
 
 	template<class T, class Iterator, class Allocator>
-	std::vector<typename collection<T, Iterator, Allocator>::value_type,
-	            typename collection<T, Iterator, Allocator>::allocator_type>
+	std::vector<typename collection<T, Iterator, Allocator>::value_type>
 	collection<T, Iterator, Allocator>::to_std_vector() const noexcept {
-		return std::vector<value_type, allocator_type>(this->begin(), this->end());
+//		return std::vector<value_type, allocator_type>(this->begin(), this->end());
 	}
 	template<class T, class Iterator, class Allocator>
-	std::list<typename collection<T, Iterator, Allocator>::value_type,
-	          typename collection<T, Iterator, Allocator>::allocator_type>
+	std::list<typename collection<T, Iterator, Allocator>::value_type>
 	collection<T, Iterator, Allocator>::to_std_list() const noexcept {
-		return std::list<value_type, allocator_type>(this->begin(), this->end());
+//		return std::list<value_type, allocator_type>(this->begin(), this->end());
 	}
 	template<class T, class Iterator, class Allocator>
 	std::set<typename collection<T, Iterator, Allocator>::value_type>

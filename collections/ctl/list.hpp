@@ -6,108 +6,120 @@
 #define COLLECTIONS_LIST_HPP
 
 #include "../abstract/collection.hpp"
-#include "../abstract/iterator.hpp"
 #include <iterator>
 
 namespace ctl {
-	struct __list_iterator;
-	template<class T, class Allocator = std::allocator<T> >
-	class list : public collection<T, __list_iterator, Allocator> {
-	private:
-		struct __node {
-		public:
-			typedef T value_type;
-		public:
-			value_type data;
-			__node *prev;
-			__node *next;
-		public:
-			bool operator==(const __node &other) {
-				return other.data == data && other.next == next && other.prev == prev;
-			}
-		};
 
-		struct __list_iterator : public __iterator<std::bidirectional_iterator_tag, T> {
-		public:
-			typedef T value_type;
-			typedef value_type &reference;
-			typedef value_type const &const_reference;
+	template<class T>
+	struct __node {
+	public:
+		typedef T value_type;
+	public:
+		value_type data;
+		__node *prev;
+		__node *next;
+	public:
+		bool operator==(const __node &other) {
+			return other.data == data && other.next == next && other.prev == prev;
+		}
+	};
 
-			typedef __node node;
-			typedef node *node_point;
-			typedef size_t size_type;
-		public:
-			node_point data_point;
-		public:
-			explicit __list_iterator(node_point point = nullptr) : data_point(point) {}
+	template<class T>
+	struct __list_iterator : public std::iterator<std::bidirectional_iterator_tag, T> {
+	public:
+		typedef T value_type;
+		typedef value_type &reference;
+		typedef value_type const &const_reference;
 
-			inline __list_iterator &operator++() override {
-				data_point = data_point->next;
-				return *this;
-			}
-			inline __list_iterator operator++(int) {
-				__list_iterator value = *this;
+		typedef __node<T> node;
+		typedef node *node_point;
+		typedef size_t size_type;
+	public:
+		node_point data_point;
+	public:
+		explicit __list_iterator(node_point point = nullptr) : data_point(point) {}
+
+		inline __list_iterator &operator++() {
+			data_point = data_point->next;
+			return *this;
+		}
+		inline __list_iterator operator++(int) {
+			__list_iterator value = *this;
+			++*this;
+			return value;
+		}
+		inline __list_iterator &operator--() {
+			data_point = data_point->prev;
+			return *this;
+		}
+		inline __list_iterator operator--(int) {
+			__list_iterator value = *this;
+			--*this;
+			return value;
+		}
+		inline reference operator*() { return data_point->data; }
+		inline const_reference operator*() const { return data_point->data; }
+		inline T *operator->() { return &(operator*()); }
+
+		friend inline bool operator==(const __list_iterator &__x, const __list_iterator &__y) {
+			return __x.data_point == __y.data_point;
+		}
+		friend inline bool operator!=(const __list_iterator &__x, const __list_iterator &__y) {
+			return !(__x == __y);
+		}
+
+		inline __list_iterator &plus(size_type idx) {
+			for (; idx > 0; --idx)
 				++*this;
-				return value;
-			}
-			inline __list_iterator &operator--() override {
-				data_point = data_point->prev;
-				return *this;
-			}
-			inline __list_iterator operator--(int) {
-				__list_iterator value = *this;
+			return *this;
+		}
+		inline __list_iterator &minus(size_type idx) {
+			for (; idx > 0; --idx)
 				--*this;
-				return value;
-			}
-			inline T &operator*() override { return data_point->data; }
-			inline T *operator->() override { return &(operator*()); }
+			return *this;
+		}
 
-			inline bool operator==(const __list_iterator &rhs) override {
-				return this->data_point == rhs.data_point;
-			}
+		inline __list_iterator operator+(size_type idx) {
+			__list_iterator value = *this;
+			value.plus(idx);
+			return value;
+		}
+		inline __list_iterator operator-(size_type idx) {
+			__list_iterator value = *this;
+			value.minus(idx);
+			return value;
+		}
+	};
 
-			inline __list_iterator &plus(size_type idx) override {
-				for (; idx > 0; --idx)
-					++*this;
-				return *this;
-			}
-			inline __list_iterator &minus(size_type idx) override {
-				for (; idx > 0; --idx)
-					--*this;
-				return *this;
-			}
+	template<class T, class Allocator = std::allocator<__node<T>>>
+	class list : public collection<T, __list_iterator<T>, Allocator> {
+	private:
 
-			inline __list_iterator operator+(size_type idx) {
-				__list_iterator value = *this;
-				value.plus(idx);
-				return value;
-			}
-			inline __list_iterator operator-(size_type idx) {
-				__list_iterator value = *this;
-				value.minus(idx);
-				return value;
-			}
-		};
 	public:
 		typedef Allocator allocator_type;
 		typedef T value_type;
-		typedef __list_iterator iterator;
+		typedef __list_iterator<T> iterator;
 		typedef const iterator const_iterator;
 		typedef std::reverse_iterator<iterator> reverse_iterator;
 		typedef const std::reverse_iterator<iterator> const_reverse_iterator;
-		typedef iterator pointer;
+		typedef T *pointer;
 		typedef value_type &reference;
 		typedef value_type const &const_reference;
 		typedef size_t size_type;
 		typedef std::ptrdiff_t difference_type;
 
 		typedef std::function<bool(const_reference)> conformer;
+
+		typedef __node<T> node;
+		typedef node *node_point;
 	private:
 		iterator _head;
 		iterator _tail;
 		size_type _size = 0;
 	public:
-		list() : list(Allocator()), _head(iterator()), _tail(iterator()), _size(0) {}
+		list() : collection<value_type, iterator, allocator_type>(Allocator()),
+			_head(this->_allocator.allocate(1)), _tail(_head), _size(0) {}
+
 		explicit list(const Allocator &alloc);
 
 		explicit list(size_type count, const T &value = T(), const Allocator &alloc = Allocator());
@@ -178,15 +190,33 @@ namespace ctl {
 		inline collection<value_type, iterator, allocator_type> &subsequence(const_iterator from,
 		                                                                     const_iterator to) override;
 		inline collection<value_type, iterator, allocator_type> &subsequence(size_type from, size_type to) override;
+	private:
+		inline void _delete_data(iterator from, iterator to);
+		inline void _delete_node(node_point point);
 	};
-
 	template<class T, class Allocator>
-	list<T, Allocator>::list(const Allocator &alloc):
-		collection<value_type, iterator, allocator_type>(alloc), _head(iterator()), _tail(iterator()), _size(0) {
+	void list<T, Allocator>::_delete_data(iterator from, iterator to) {
+		for (; from != to; ++from) {
+			_delete_node(from.data_point);
+		}
+		_delete_node(to.data_point);
+	}
+	template<class T, class Allocator>
+	void list<T, Allocator>::_delete_node(node_point point) {
+		this->_allocator.destroy(point);
+		this->_allocator.deallocate(point, 1);
+	}
+	template<class T, class Allocator>
+	list<T, Allocator>::list(const Allocator &alloc): collection<value_type, iterator, allocator_type>(alloc),
+	                                                  _head(this->_allocator.allocate(1)),
+	                                                  _tail(_head),
+	                                                  _size(0) {
+		_head.data_point->next = _tail.data_point;
+		_tail.data_point->prev = _head.data_point;
 	}
 	template<class T, class Allocator>
 	list<T, Allocator>::list(size_type count, const Allocator &alloc):
-		collection<value_type, iterator, allocator_type>(alloc), _size(count) {
+		list(alloc) {
 		this->reserve(count);
 	}
 
@@ -197,8 +227,10 @@ namespace ctl {
 
 	template<class T, class Allocator>
 	list<T, Allocator>::list(const list<value_type, allocator_type> &other):
-		collection<value_type, iterator, allocator_type>(other.allocator()) {
-		_NOT_IMPLEMENTED_;
+		list(other.size(), other.allocator()) {
+		for (iterator iter = begin(), other_iter = other.begin(); iter != end(); ++iter, ++other_iter) {
+			this->_allocator.construct(iter.data_point, *other_iter);
+		}
 	}
 	template<class T, class Allocator>
 	list<T, Allocator>::list(const list<value_type, allocator_type> &other, const Allocator &alloc)
@@ -213,8 +245,7 @@ namespace ctl {
 
 	template<class T, class Allocator>
 	list<T, Allocator>::~list() {
-		_NOT_IMPLEMENTED_;
-
+		_delete_data(begin(), end());
 	}
 	template<class T, class Allocator>
 	list<T, Allocator>::list(std::initializer_list<value_type> il, const Allocator &alloc): list(il.size(),
@@ -241,11 +272,11 @@ namespace ctl {
 	}
 	template<class T, class Allocator>
 	typename list<T, Allocator>::reference list<T, Allocator>::back() {
-		return *(_tail - 1);
+		return _tail.data_point->prev->data;
 	}
 	template<class T, class Allocator>
 	typename list<T, Allocator>::const_reference list<T, Allocator>::back() const {
-		return *(_tail - 1);
+		return _tail.data_point->prev->data;
 	}
 	template<class T, class Allocator>
 	typename list<T, Allocator>::iterator list<T, Allocator>::begin() noexcept {
@@ -298,7 +329,7 @@ namespace ctl {
 	}
 	template<class T, class Allocator>
 	bool list<T, Allocator>::empty() const noexcept {
-		return _tail == _head;
+		return !_size;
 	}
 
 	template<class T, class Allocator>
@@ -380,20 +411,36 @@ namespace ctl {
 	}
 	template<class T, class allocator>
 	void list<T, allocator>::pop_back() {
-		_NOT_IMPLEMENTED_;
+		node_point deleted_node = _tail.data_point->prev;
+		_tail.data_point->prev = deleted_node->prev;
+		_tail.data_point->prev->next = _tail.data_point;
+		_delete_node(deleted_node);
+		--_size;
 	}
 
 	template<class T, class allocator>
 	void list<T, allocator>::pop_front() {
-		_NOT_IMPLEMENTED_;
+		_head.data_point = _head.data_point->next;
+		_delete_node(_head.data_point->prev);
+		--_size;
 	}
 	template<class T, class allocator>
 	void list<T, allocator>::push_back(const_reference value) {
-		_NOT_IMPLEMENTED_;
+		node_point new_tail = this->_allocator.allocate(1);
+		_tail.data_point->data = value;
+		_tail.data_point->next = new_tail;
+		new_tail->prev = _tail.data_point;
+		_tail.data_point = new_tail;
+		++_size;
 	}
 	template<class T, class allocator>
 	void list<T, allocator>::push_back(value_type &&value) {
-		_NOT_IMPLEMENTED_;
+		node_point new_tail = this->_allocator.allocate(1);
+		_tail.data_point->data = std::move(value);
+		_tail.data_point->next = new_tail;
+		new_tail->prev = _tail.data_point;
+		_tail.data_point = new_tail;
+		++_size;
 	}
 
 	template<class T, class allocator>
@@ -409,7 +456,6 @@ namespace ctl {
 	void list<T, allocator>::resize(size_type sz) {
 		if (!sz)
 			clear();
-
 		reserve(sz);
 	}
 
@@ -419,7 +465,14 @@ namespace ctl {
 	}
 	template<class T, class allocator>
 	void list<T, allocator>::reserve(size_type n) {
-		_NOT_IMPLEMENTED_;
+		long long difference = n - size();
+		if (difference > 0) {
+			for (; difference > 0; --difference)
+				push_back(T());
+		} else if (difference < 0) {
+			for (; difference < 0; ++difference)
+				pop_back();
+		}
 	}
 	template<class T, class Allocator>
 	list<typename list<T, Allocator>::value_type, typename list<T, Allocator>::allocator_type> &
