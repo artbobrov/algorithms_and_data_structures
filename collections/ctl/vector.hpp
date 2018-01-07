@@ -30,7 +30,9 @@ namespace ctl {
 		inline explicit vector(const Allocator &alloc);
 		inline explicit vector(size_type count, const Allocator &alloc = Allocator());
 		inline explicit vector(size_type count, const T &value = T(), const Allocator &alloc = Allocator());
-		inline explicit vector(iterator begin, iterator end, const Allocator &alloc = Allocator());
+
+		template<class Iterator>
+		inline explicit vector(Iterator begin, Iterator end, const Allocator &alloc = Allocator());
 		inline vector(const vector<value_type, allocator_type> &other);
 		inline explicit vector(const vector<value_type, allocator_type> &other, const Allocator &alloc);
 		inline vector(vector &&other) noexcept;
@@ -73,7 +75,11 @@ namespace ctl {
 		inline iterator insert(const_iterator position, size_type count, const T &value) override;
 		inline iterator insert(const_iterator position, std::initializer_list<value_type> il) override;
 		inline iterator insert(size_type idx, size_type count, const T &value) override;
-		iterator insert(const_iterator position, const T *first, const T *last);
+		template<class Iterator>
+		iterator insert(const_iterator position,
+		                Iterator first,
+		                Iterator last,
+		                typename std::enable_if<std::__is_input_iterator<Iterator>::value>::type * = 0); // OK
 
 		inline void pop_back() override;
 		inline void pop_front() override;
@@ -121,10 +127,13 @@ namespace ctl {
 	}
 
 	template<class T, class Allocator>
-	vector<T, Allocator>::vector(iterator begin, iterator end, const Allocator &alloc): vector(end - begin, alloc) {
-		const_iterator start = begin;
-		for (; begin != end; ++begin)
-			this->_allocator.construct(_begin + this->distance(begin, start), *begin);
+	template<class Iterator>
+	vector<T, Allocator>::vector(Iterator begin, Iterator end, const Allocator &alloc): vector(end - begin, alloc) {
+		Iterator start = begin;
+		for (size_type _distance = 0; begin != end; ++begin, ++_distance) {
+			this->_allocator.construct(_begin + _distance, *begin);
+		}
+		_end = _storage_end;
 	}
 
 	template<class T, class Allocator>
@@ -163,7 +172,7 @@ namespace ctl {
 	template<class T, class Allocator>
 	vector<T, Allocator>::vector(std::initializer_list<value_type> il, const Allocator &alloc): vector(il.size(),
 	                                                                                                   alloc) {
-		for (std::initializer_list<value_type>::iterator it = il.begin(); it != il.end(); ++it)
+		for (typename std::initializer_list<value_type>::iterator it = il.begin(); it != il.end(); ++it)
 			this->_allocator.construct(_begin + this->distance(it, il.begin()), *it);
 
 	}
@@ -402,11 +411,13 @@ namespace ctl {
 	                                                                     std::initializer_list<value_type> il) {
 		return insert(position, il.begin(), il.end());
 	}
-
 	template<class T, class Allocator>
+	template<class Iterator>
 	typename vector<T, Allocator>::iterator vector<T, Allocator>::insert(const_iterator position,
-	                                                                     const T *first,
-	                                                                     const T *last) {
+	                                                                     Iterator first,
+	                                                                     Iterator last,
+	                                                                     typename std::enable_if<std::__is_input_iterator<
+		                                                                     Iterator>::value>::type *) {
 		iterator middle;
 		size_type count = last - first;
 		if (size() + count > capacity() || position - _begin + count > capacity()) {
@@ -438,8 +449,8 @@ namespace ctl {
 
 		}
 		return middle;
-
 	}
+
 	template<class T, class allocator>
 	void vector<T, allocator>::pop_back() {
 		--_end;

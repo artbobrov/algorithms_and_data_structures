@@ -66,6 +66,11 @@ namespace ctl {
 		friend inline bool operator!=(const __list_iterator &__x, const __list_iterator &__y) {
 			return !(__x == __y);
 		}
+		friend inline size_type operator-(__list_iterator __x, __list_iterator __y) {
+			size_type distance = 0;
+			for (; __x != __y; ++__y, ++distance) {}
+			return distance;
+		}
 
 		inline __list_iterator &plus(size_type idx) {
 			for (; idx > 0; --idx)
