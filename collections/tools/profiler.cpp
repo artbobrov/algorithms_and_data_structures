@@ -16,3 +16,6 @@ const double debug::profiler::time() const noexcept {
 void debug::profiler::clear() {
 	_start = _finish = time_point();
 }
+void debug::profiler::sleep_for(unsigned long long seconds) {
+	std::this_thread::sleep_for(std::chrono::seconds(static_cast<std::chrono::seconds::rep>(seconds)));
+}
