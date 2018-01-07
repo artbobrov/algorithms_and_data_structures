@@ -10,15 +10,15 @@
 #include <memory>
 
 namespace ctl {
-	template<class T, class Allocator>
+	template<class T, class Iterator, class Allocator>
 	class collection;
 
-	template<class T, class Allocator>
+	template<class T, class Iterator, class Allocator>
 	class modifiable {
 	public:
 		typedef Allocator allocator_type;
 		typedef T value_type;
-		typedef value_type *iterator;
+		typedef Iterator iterator;
 		typedef const iterator const_iterator;
 		typedef std::reverse_iterator<iterator> reverse_iterator;
 		typedef const std::reverse_iterator<iterator> const_reverse_iterator;
@@ -32,7 +32,7 @@ namespace ctl {
 		typedef std::function<void(reference)> action;
 		typedef std::function<bool(const_reference, const_reference)> comparer;
 	public:
-		inline virtual void append(const collection<value_type, allocator_type> &value) = 0;
+		inline virtual void append(const collection<value_type, iterator, allocator_type> &value) = 0;
 		inline void append(const_reference value); // qt
 		inline void append(value_type &&value); // qt
 
@@ -61,20 +61,20 @@ namespace ctl {
 		inline void remove_first(); // qt
 
 	};
-	template<class T, class Allocator>
-	void modifiable<T, Allocator>::append(const_reference value) {
+	template<class T, class Iterator, class Allocator>
+	void modifiable<T, Iterator, Allocator>::append(const_reference value) {
 		push_back(value);
 	}
-	template<class T, class Allocator>
-	void modifiable<T, Allocator>::append(value_type &&value) {
+	template<class T, class Iterator, class Allocator>
+	void modifiable<T, Iterator, Allocator>::append(value_type &&value) {
 		push_back(value);
 	}
-	template<class T, class Allocator>
-	void modifiable<T, Allocator>::remove_last() {
+	template<class T, class Iterator, class Allocator>
+	void modifiable<T, Iterator, Allocator>::remove_last() {
 		pop_back();
 	}
-	template<class T, class Allocator>
-	void modifiable<T, Allocator>::remove_first() {
+	template<class T, class Iterator, class Allocator>
+	void modifiable<T, Iterator, Allocator>::remove_first() {
 		pop_front();
 	}
 

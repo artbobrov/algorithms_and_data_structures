@@ -9,14 +9,14 @@
 #include "object.hpp"
 
 namespace ctl {
-	template<class T>
+	template<class T, class Iterator>
 	class element_accessible {
 	public:
 		typedef T value_type;
-		typedef value_type *iterator;
+		typedef Iterator iterator;
 		typedef value_type &reference;
 		typedef value_type const &const_reference;
-		typedef iterator pointer;
+		typedef T *pointer;
 		typedef size_t size_type;
 	public:
 		inline virtual reference at(size_type i) = 0; // stl
@@ -34,12 +34,13 @@ namespace ctl {
 		inline reference operator[](size_type i); // stl
 		inline const_reference operator[](size_type i) const; // stl
 	};
-	template<class T>
-	typename element_accessible<T>::reference element_accessible<T>::operator[](size_type i) {
+	template<class T, class Iterator>
+	typename element_accessible<T, Iterator>::reference element_accessible<T, Iterator>::operator[](size_type i) {
 		return at(i);
 	}
-	template<class T>
-	typename element_accessible<T>::const_reference element_accessible<T>::operator[](size_type i) const {
+	template<class T, class Iterator>
+	typename element_accessible<T, Iterator>::const_reference
+	element_accessible<T, Iterator>::operator[](size_type i) const {
 		return at(i);
 	}
 
