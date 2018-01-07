@@ -16,7 +16,7 @@ namespace ctl {
 		typedef const iterator const_iterator;
 		typedef std::reverse_iterator<iterator> reverse_iterator;
 		typedef const std::reverse_iterator<iterator> const_reverse_iterator;
-		typedef T* pointer;
+		typedef T *pointer;
 		typedef value_type &reference;
 		typedef value_type const &const_reference;
 		typedef size_t size_type;
@@ -67,13 +67,13 @@ namespace ctl {
 		inline vector<value_type, allocator_type> &filled(const T &value);
 		inline vector<value_type, allocator_type> &filled(const T &value, size_type size);
 
-		inline iterator insert(const_iterator position, const T &value) override;
+		iterator insert(const_iterator position, const T &value) override;
 		inline iterator insert(size_type idx, const T &value) override;
 		inline iterator insert(const_iterator position, value_type &&value) override;
 		inline iterator insert(const_iterator position, size_type count, const T &value) override;
 		inline iterator insert(const_iterator position, std::initializer_list<value_type> il) override;
 		inline iterator insert(size_type idx, size_type count, const T &value) override;
-		inline iterator insert(const_iterator position, const T *first, const T *last);
+		iterator insert(const_iterator position, const T *first, const T *last);
 
 		inline void pop_back() override;
 		inline void pop_front() override;
@@ -163,7 +163,7 @@ namespace ctl {
 	template<class T, class Allocator>
 	vector<T, Allocator>::vector(std::initializer_list<value_type> il, const Allocator &alloc): vector(il.size(),
 	                                                                                                   alloc) {
-		for (const T *it = il.begin(); it != il.end(); ++it)
+		for (std::initializer_list<value_type>::iterator it = il.begin(); it != il.end(); ++it)
 			this->_allocator.construct(_begin + this->distance(it, il.begin()), *it);
 
 	}
@@ -570,7 +570,7 @@ namespace ctl {
 	           typename vector<T, Allocator>::iterator,
 	           typename vector<T, Allocator>::allocator_type> &
 	vector<T, Allocator>::subsequence(const_iterator from, const_iterator to) {
-		auto *other = new vector<value_type, allocator_type>(from, to + 1);
+		auto *other = new vector<value_type, allocator_type>(from, to);
 		return *other;
 	}
 	template<class T, class Allocator>
