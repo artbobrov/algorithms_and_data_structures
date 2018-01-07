@@ -16,7 +16,7 @@ namespace ctl {
 		typedef const iterator const_iterator;
 		typedef std::reverse_iterator<iterator> reverse_iterator;
 		typedef const std::reverse_iterator<iterator> const_reverse_iterator;
-		typedef iterator pointer;
+		typedef T *pointer;
 		typedef value_type &reference;
 		typedef value_type const &const_reference;
 		typedef size_t size_type;
@@ -67,13 +67,13 @@ namespace ctl {
 		inline vector<value_type, allocator_type> &filled(const T &value);
 		inline vector<value_type, allocator_type> &filled(const T &value, size_type size);
 
-		inline iterator insert(const_iterator position, const T &value) override;
+		iterator insert(const_iterator position, const T &value) override;
 		inline iterator insert(size_type idx, const T &value) override;
 		inline iterator insert(const_iterator position, value_type &&value) override;
 		inline iterator insert(const_iterator position, size_type count, const T &value) override;
 		inline iterator insert(const_iterator position, std::initializer_list<value_type> il) override;
 		inline iterator insert(size_type idx, size_type count, const T &value) override;
-		inline iterator insert(const_iterator position, const T *first, const T *last);
+		iterator insert(const_iterator position, const T *first, const T *last);
 
 		inline void pop_back() override;
 		inline void pop_front() override;
@@ -106,11 +106,11 @@ namespace ctl {
 	};
 
 	template<class T, class Allocator>
-	vector<T, Allocator>::vector(const Allocator &alloc): vector() {
-		this->_allocator = alloc;
+	vector<T, Allocator>::vector(const Allocator &alloc): collection<value_type, iterator, allocator_type>(alloc) {
 	}
 	template<class T, class Allocator>
-	vector<T, Allocator>::vector(size_type count, const Allocator &alloc): vector(alloc) {
+	vector<T, Allocator>::vector(size_type count, const Allocator &alloc):
+		collection<value_type, iterator, allocator_type>(alloc) {
 		_end = _begin = this->_allocator.allocate(count);
 		_storage_end = _begin + count;
 	}
@@ -128,15 +128,15 @@ namespace ctl {
 	}
 
 	template<class T, class Allocator>
-	vector<T, Allocator>::vector(const vector<value_type, allocator_type> &other): vector(other._allocator) {
+	vector<T, Allocator>::vector(const vector<value_type, allocator_type> &other):
+		collection<value_type, iterator, allocator_type>(other._allocator) {
 		_begin = this->_allocator.allocate(other.capacity());
 		_end = _copy_data(other.begin(), other.end(), _begin);
 		_storage_end = _begin + other.capacity();
 	}
 	template<class T, class Allocator>
 	vector<T, Allocator>::vector(const vector<value_type, allocator_type> &other, const Allocator &alloc)
-		:vector(other) {
-		this->_allocator = alloc;
+		:collection<value_type, iterator, allocator_type>(alloc), vector(other) {
 	}
 	template<class T, class Allocator>
 	vector<T, Allocator>::vector(vector &&other) noexcept: vector(other._allocator) {
@@ -163,7 +163,7 @@ namespace ctl {
 	template<class T, class Allocator>
 	vector<T, Allocator>::vector(std::initializer_list<value_type> il, const Allocator &alloc): vector(il.size(),
 	                                                                                                   alloc) {
-		for (const T *it = il.begin(); it != il.end(); ++it)
+		for (std::initializer_list<value_type>::iterator it = il.begin(); it != il.end(); ++it)
 			this->_allocator.construct(_begin + this->distance(it, il.begin()), *it);
 
 	}
@@ -295,6 +295,18 @@ namespace ctl {
 	typename vector<T, Allocator>::const_reference vector<T, Allocator>::front() const {
 		return *_begin;
 	}
+	template<class T, class Allocator>
+	collection<typename vector<T, Allocator>::value_type,
+	           typename vector<T, Allocator>::iterator,
+	           typename vector<T, Allocator>::allocator_type> &
+	vector<T, Allocator>::filter(conformer conform) {
+		auto *other = new vector<value_type, allocator_type>(size(), this->allocator());
+		for (const_reference element: *this)
+			if (conform(element))
+				other->push_back(element);
+		return *other;
+	}
+
 	template<class T, class Allocator>
 	vector<typename vector<T, Allocator>::value_type, typename vector<T, Allocator>::allocator_type> &
 	vector<T, Allocator>::filled(
@@ -558,7 +570,7 @@ namespace ctl {
 	           typename vector<T, Allocator>::iterator,
 	           typename vector<T, Allocator>::allocator_type> &
 	vector<T, Allocator>::subsequence(const_iterator from, const_iterator to) {
-		auto *other = new vector<value_type, allocator_type>(from, to + 1);
+		auto *other = new vector<value_type, allocator_type>(from, to);
 		return *other;
 	}
 	template<class T, class Allocator>
@@ -568,17 +580,7 @@ namespace ctl {
 	vector<T, Allocator>::subsequence(size_type from, size_type to) {
 		return subsequence(_begin + from, _begin + to);
 	}
-	template<class T, class Allocator>
-	collection<typename vector<T, Allocator>::value_type,
-	           typename vector<T, Allocator>::iterator,
-	           typename vector<T, Allocator>::allocator_type> &
-	vector<T, Allocator>::filter(conformer conform) {
-		auto *other = new vector<value_type, allocator_type>(size(), this->allocator());
-		for (const_reference element: *this)
-			if (conform(element))
-				other->push_back(element);
-		return *other;
-	}
+
 }
 
 #endif //COLLECTIONS_VECTOR_HPP

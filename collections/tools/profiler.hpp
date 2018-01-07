@@ -6,6 +6,7 @@
 #define COLLECTIONS_PROFILER_HPP
 
 #include <chrono>
+#include <thread>
 
 namespace debug {
 	class profiler {
@@ -23,6 +24,8 @@ namespace debug {
 		void finish();
 
 		void clear();
+
+		void sleep_for(unsigned long long seconds = 0);
 
 		const double time() const noexcept; // seconds
 	};
