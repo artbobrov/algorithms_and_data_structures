@@ -97,8 +97,6 @@ namespace ctl {
 
 	template<class T, class Allocator = std::allocator<__node<T>>>
 	class list : public collection<T, __list_iterator<T>, Allocator> {
-	private:
-
 	public:
 		typedef Allocator allocator_type;
 		typedef T value_type;
@@ -121,14 +119,14 @@ namespace ctl {
 		iterator _tail;
 		size_type _size = 0;
 	public:
-		explicit list(const Allocator &alloc = Allocator()); // OK
+		explicit list(const Allocator &alloc = Allocator()); 
 
-		explicit list(size_type count, const T &value, const Allocator &alloc = Allocator()); // OK
-		explicit list(size_type count, const Allocator &alloc = Allocator()); // OK
+		explicit list(size_type count, const T &value, const Allocator &alloc = Allocator()); 
+		explicit list(size_type count, const Allocator &alloc = Allocator()); 
 		inline explicit list(iterator begin, iterator end, const Allocator &alloc = Allocator());
-		list(const list &other); // OK
+		list(const list &other); 
 		list(const list &other, const Allocator &alloc) : collection<value_type, iterator, allocator_type>(alloc),
-		                                                  list(other) {} // OK
+		                                                  list(other) {} 
 		list(list &&other) noexcept: list(other, other.allocator()) {}
 		list(list &&other, const Allocator &alloc) noexcept;
 		list(std::initializer_list<T> il, const Allocator &alloc = Allocator());
@@ -154,47 +152,47 @@ namespace ctl {
 		inline pointer data() noexcept override;
 		inline const pointer data() const noexcept override;
 
-		inline iterator end() noexcept override; // OK
-		inline const_iterator end() const noexcept override; // OK
-		inline iterator erase(const_iterator position) override; // OK
-		inline iterator erase(const_iterator first, const_iterator last) override; // OK
-		inline bool empty() const noexcept override; // OK
+		inline iterator end() noexcept override; 
+		inline const_iterator end() const noexcept override; 
+		inline iterator erase(const_iterator position) override; 
+		inline iterator erase(const_iterator first, const_iterator last) override; 
+		inline bool empty() const noexcept override; 
 
-		inline reference front() override; // OK
-		inline const_reference front() const override; // OK
-		collection<value_type, iterator, allocator_type> &filter(conformer conform) override; // OK
+		inline reference front() override; 
+		inline const_reference front() const override; 
+		collection<value_type, iterator, allocator_type> &filter(conformer conform) override; 
 		inline list<value_type, allocator_type> &filled(const T &value); // +-
-		inline list<value_type, allocator_type> &filled(const T &value, size_type size); // +-
+		inline list<value_type, allocator_type> &filled(const T &value, size_type size);
 
-		inline iterator insert(const_iterator position, const T &value) override; // OK
-		inline iterator insert(size_type idx, const T &value) override; // OK
-		inline iterator insert(const_iterator position, value_type &&value) override; // OK
-		inline iterator insert(const_iterator position, size_type count, const T &value) override; // OK
-		iterator insert(const_iterator position, std::initializer_list<value_type> il) override; // OK
+		inline iterator insert(const_iterator position, const T &value) override; 
+		inline iterator insert(size_type idx, const T &value) override; 
+		inline iterator insert(const_iterator position, value_type &&value) override; 
+		inline iterator insert(const_iterator position, size_type count, const T &value) override; 
+		iterator insert(const_iterator position, std::initializer_list<value_type> il) override; 
 		inline iterator insert(size_type idx, size_type count, const T &value) override;
 		template<class Iterator>
 		iterator insert(const_iterator position,
 		                Iterator first,
 		                Iterator last,
-		                typename std::enable_if<std::__is_input_iterator<Iterator>::value>::type * = 0); // OK
+		                typename std::enable_if<std::__is_input_iterator<Iterator>::value>::type * = 0); 
 
-		inline void pop_back() override; // OK
-		inline void pop_front() override; // OK
-		inline void push_back(const_reference value) override; // OK
-		inline void push_back(value_type &&value) override; // OK
-		inline void push_front(const_reference value) override; //
-		inline void push_front(value_type &&value) override; //
+		inline void pop_back() override; 
+		inline void pop_front() override; 
+		inline void push_back(const_reference value) override; 
+		inline void push_back(value_type &&value) override; 
+		inline void push_front(const_reference value) override;
+		inline void push_front(value_type &&value) override;
 
-		inline void resize(size_type count) override; // OK
-		inline void resize(size_type count, const T &value) override; // OK
-		inline void reserve(size_type n) override; // OK
-		inline list<value_type, allocator_type> &reversed(); // ok
-		inline list<value_type, allocator_type> &reversed(iterator first, iterator last); // Ok
+		inline void resize(size_type count) override; 
+		inline void resize(size_type count, const T &value) override; 
+		inline void reserve(size_type n) override; 
+		inline list<value_type, allocator_type> &reversed(); 
+		inline list<value_type, allocator_type> &reversed(iterator first, iterator last); 
 
-		inline void swap(list<value_type, allocator_type> &other) noexcept; // OK
-		inline explicit operator std::string() const noexcept override; // ok
-		inline size_type size() const noexcept override; // ok
-		inline void shrink_to_fit() noexcept override; // not needed
+		inline void swap(list<value_type, allocator_type> &other) noexcept; 
+		inline explicit operator std::string() const noexcept override; 
+		inline size_type size() const noexcept override; 
+		inline void shrink_to_fit() noexcept override {}
 
 		inline collection<value_type, iterator, allocator_type> &subsequence(iterator from,
 		                                                                     iterator to) override;
@@ -578,9 +576,6 @@ namespace ctl {
 		other->reverse(other->_head + this->distance(first, _head),
 		               other->_head + this->distance(last, _head));
 		return *other;
-	}
-	template<class T, class allocator>
-	void list<T, allocator>::shrink_to_fit() noexcept {
 	}
 	template<class T, class allocator>
 	void list<T, allocator>::swap(list<value_type, allocator_type> &other) noexcept {
