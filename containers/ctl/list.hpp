@@ -591,7 +591,7 @@ namespace ctl {
 	template<class T, class allocator>
 	list<T, allocator>::operator std::string() const noexcept {
 		using std::to_string;
-		std::string output = '[' + to_string(this->size()) + ',' + to_string(this->capacity()) + "] ";
+		std::string output = '[' + to_string(this->size()) + "] ";
 		for (reference element: *this)
 			output += to_string(element) + " ";
 		return output;

@@ -123,6 +123,7 @@ namespace ctl {
 
 	template<class T, class Allocator>
 	vector<T, Allocator>::vector(size_type count, const T &value, const Allocator &alloc): vector(count, alloc) {
+		_end = _storage_end;
 		this->fill(value);
 	}
 
