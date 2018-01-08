@@ -132,7 +132,10 @@ namespace ctl {
 		list(std::initializer_list<T> il, const Allocator &alloc = Allocator());
 
 		template<class Iterator>
-		list(Iterator first, Iterator last, const Allocator &alloc = Allocator());
+		list(Iterator first,
+		     Iterator last,
+		     const Allocator &alloc = Allocator(),
+		     typename std::enable_if<std::__is_input_iterator<Iterator>::value>::type * = 0);
 		inline virtual ~list();
 	public:
 		inline reference at(size_type i) override;
@@ -265,7 +268,10 @@ namespace ctl {
 	}
 	template<class T, class Allocator>
 	template<class Iterator>
-	list<T, Allocator>::list(Iterator first, Iterator last, const Allocator &alloc): list(alloc) {
+	list<T, Allocator>::list(Iterator first,
+	                         Iterator last,
+	                         const Allocator &alloc,
+	                         typename std::enable_if<std::__is_input_iterator<Iterator>::value>::type *): list(alloc) {
 		for (; first != last; ++first)
 			this->push_back(*first);
 	}

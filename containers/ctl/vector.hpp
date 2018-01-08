@@ -4,7 +4,7 @@
 
 #ifndef COLLECTIONS_VECTOR_HPP
 #define COLLECTIONS_VECTOR_HPP
-#include "../abstract/collection.hpp"
+#include "abstract/collection.hpp"
 
 namespace ctl {
 	template<class T, class Allocator = std::allocator<T> >
@@ -32,7 +32,8 @@ namespace ctl {
 		inline explicit vector(size_type count, const T &value = T(), const Allocator &alloc = Allocator());
 
 		template<class Iterator>
-		inline explicit vector(Iterator begin, Iterator end, const Allocator &alloc = Allocator());
+		inline explicit vector(Iterator begin, Iterator end, const Allocator &alloc = Allocator(),
+		                       typename std::enable_if<std::__is_input_iterator<Iterator>::value>::type * = 0);
 		inline vector(const vector<value_type, allocator_type> &other);
 		inline explicit vector(const vector<value_type, allocator_type> &other, const Allocator &alloc);
 		inline vector(vector &&other) noexcept;
@@ -129,7 +130,11 @@ namespace ctl {
 
 	template<class T, class Allocator>
 	template<class Iterator>
-	vector<T, Allocator>::vector(Iterator begin, Iterator end, const Allocator &alloc): vector(end - begin, alloc) {
+	vector<T, Allocator>::vector(Iterator begin,
+	                             Iterator end,
+	                             const Allocator &alloc,
+	                             typename std::enable_if<std::__is_input_iterator<Iterator>::value>::type *):
+		vector(end - begin, alloc) {
 		Iterator start = begin;
 		for (size_type _distance = 0; begin != end; ++begin, ++_distance) {
 			this->_allocator.construct(_begin + _distance, *begin);
