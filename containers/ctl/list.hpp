@@ -5,7 +5,7 @@
 #ifndef COLLECTIONS_LIST_HPP
 #define COLLECTIONS_LIST_HPP
 
-#include "../abstract/collection.hpp"
+#include "abstract/collection.hpp"
 #include <iterator>
 #include <type_traits>
 namespace ctl {

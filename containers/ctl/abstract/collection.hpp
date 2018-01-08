@@ -82,6 +82,12 @@ namespace ctl {
 		                                                                             iterator to) = 0; // swift
 		inline virtual collection<value_type, iterator, allocator_type> &subsequence(size_type from,
 		                                                                             size_type to) = 0; // swift
+
+	public:
+		bool operator==(const std::vector<T> &vector) const;
+		bool operator==(const std::list<T> &list) const;
+		bool operator!=(const std::vector<T> &vector) const;
+		bool operator!=(const std::list<T> &list) const;
 	protected:
 		allocator_type _allocator;
 	};
@@ -229,6 +235,39 @@ namespace ctl {
 	void collection<T, Iterator, Allocator>::map(map_action mapper) {
 		for (reference element: *this)
 			element = mapper(element);
+	}
+
+	template<class T, class Iterator, class Allocator>
+	bool collection<T, Iterator, Allocator>::operator==(const std::vector<T> &vector) const {
+		iterator this_iter = this->begin();
+		auto vec_iter = vector.begin();
+		for (; this_iter != this->end() && vec_iter != vector.end(); ++this_iter, ++vec_iter) {
+			if (*this_iter != *vec_iter)
+				return false;
+		}
+
+		return this_iter == this->end() && vec_iter == vector.end() &&
+			this->size() == vector.size() && this->capacity() == vector.capacity();
+	}
+	template<class T, class Iterator, class Allocator>
+	bool collection<T, Iterator, Allocator>::operator==(const std::list<T> &list) const {
+		iterator this_iter = this->begin();
+		auto list_iter = list.begin();
+		for (; this_iter != this->end() && list_iter != list.end(); ++this_iter, ++list_iter) {
+			if (*this_iter != *list_iter)
+				return false;
+		}
+		return this_iter == this->end() && list_iter == list.end() &&
+			this->size() == list.size() && this->capacity() == list.size();
+	}
+
+	template<class T, class Iterator, class Allocator>
+	bool collection<T, Iterator, Allocator>::operator!=(const std::vector<T> &vector) const {
+		return !(*this == vector);
+	}
+	template<class T, class Iterator, class Allocator>
+	bool collection<T, Iterator, Allocator>::operator!=(const std::list<T> &list) const {
+		return !(*this == list);
 	}
 
 }
