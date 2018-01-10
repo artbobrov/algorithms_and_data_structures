@@ -10,13 +10,13 @@
 #include "iterable.hpp"
 #include "reservable.hpp"
 #include "modifiable.hpp"
+#include "iterator_meta.hpp"
 
 #include <vector>
 #include <list>
 #include <set>
 
 namespace ctl {
-
 	template<class T, class Iterator, class Allocator = std::allocator<T> >
 	class collection
 		: public object,
@@ -28,10 +28,9 @@ namespace ctl {
 		typedef Allocator allocator_type;
 		typedef T value_type;
 		typedef Iterator iterator;
-		typedef const iterator const_iterator;
+		typedef iterator const_iterator;
 		typedef std::reverse_iterator<iterator> reverse_iterator;
 		typedef const std::reverse_iterator<iterator> const_reverse_iterator;
-		typedef T *pointer;
 		typedef value_type &reference;
 		typedef value_type const &const_reference;
 		typedef size_t size_type;
@@ -46,28 +45,28 @@ namespace ctl {
 	public:
 		inline allocator_type allocator() const noexcept; // stl
 
-		inline bool contains(const_reference item) const; // qt 
-		inline size_type count(const_reference item) const noexcept; // qt 
+		inline bool contains(const_reference item) const; // qt
+		inline size_type count(const_reference item) const noexcept; // qt
 		inline const_reverse_iterator crbegin() const noexcept override; // stl
 		inline const_reverse_iterator crend() const noexcept override; // stl
 
 		inline void foreach(action act); // c#
 		inline virtual collection<value_type, iterator, allocator_type> &filter(conformer conform) = 0;
-		inline void fill(const T &value); // qt 
-		inline void fill(iterator first, iterator last, const T &value); // qt 
+		inline void fill(const T &value); // qt
+		inline void fill(iterator first, iterator last, const T &value); // qt
 		inline void fill(const T &value, size_type size); // qt
 
-		inline size_type index_of(const_reference value, size_type first, size_type last) const; // qt 
-		inline iterator index_of(const_reference value, iterator first, iterator last) const; // myself 
+		inline size_type index_of(const_reference value, size_type first, size_type last) const; // qt
+		inline iterator index_of(const_reference value, iterator first, iterator last) const; // myself
 
 		inline void map(map_action mapper);
 
 		inline void reverse(); // c#
 		inline void reverse(iterator first, iterator last); // c#
 
-		inline virtual void remove_all(const_reference item); // qt 
-		inline virtual void remove_at(int i); // qt 
-		inline virtual void remove(const_reference item); // qt 
+		inline virtual void remove_all(const_reference item); // qt
+		inline virtual void remove_at(int i); // qt
+		inline virtual void remove(const_reference item); // qt
 		inline reverse_iterator rbegin() noexcept override; // stl
 		inline const_reverse_iterator rbegin() const noexcept override; // stl
 		inline reverse_iterator rend() noexcept override; // stl
@@ -75,7 +74,7 @@ namespace ctl {
 
 		inline virtual std::vector<value_type> to_std_vector() const noexcept; // qt
 		inline virtual std::list<value_type> to_std_list() const noexcept; // c#
-		inline virtual std::set<value_type> to_std_set() const noexcept; // c# 
+		inline virtual std::set<value_type> to_std_set() const noexcept; // c#
 		inline bool true_for_all(conformer conform); // c#
 
 		inline virtual collection<value_type, iterator, allocator_type> &subsequence(iterator from,
@@ -84,10 +83,23 @@ namespace ctl {
 		                                                                             size_type to) = 0; // swift
 
 	public:
-		bool operator==(const std::vector<T> &vector) const;
-		bool operator==(const std::list<T> &list) const;
-		bool operator!=(const std::vector<T> &vector) const;
-		bool operator!=(const std::list<T> &list) const;
+		template<class Container, typename = typename std::enable_if<has_begin_end<Container>::value>::type>
+		friend bool operator==(const collection<T, Iterator, Allocator> &__collection, const Container &__container) {
+			iterator _collection_iter = __collection.begin();
+			auto _container_iter = __container.begin();
+
+			for (; _collection_iter != __collection.end() && _container_iter != __container.end();
+			       ++_collection_iter, ++_container_iter) {
+				if (*_collection_iter != *_container_iter)
+					return false;
+			}
+			return _collection_iter == __collection.end() && _container_iter == __container.end() &&
+				__collection.size() == __container.size();
+		}
+		template<class Container, typename = typename std::enable_if<has_begin_end<Container>::value>::type>
+		friend bool operator!=(const collection<T, Iterator, Allocator> &__collection, const Container &__container) {
+			return !(__collection == __container);
+		}
 	protected:
 		allocator_type _allocator;
 	};
@@ -235,39 +247,6 @@ namespace ctl {
 	void collection<T, Iterator, Allocator>::map(map_action mapper) {
 		for (reference element: *this)
 			element = mapper(element);
-	}
-
-	template<class T, class Iterator, class Allocator>
-	bool collection<T, Iterator, Allocator>::operator==(const std::vector<T> &vector) const {
-		iterator this_iter = this->begin();
-		auto vec_iter = vector.begin();
-		for (; this_iter != this->end() && vec_iter != vector.end(); ++this_iter, ++vec_iter) {
-			if (*this_iter != *vec_iter)
-				return false;
-		}
-
-		return this_iter == this->end() && vec_iter == vector.end() &&
-			this->size() == vector.size() && this->capacity() == vector.capacity();
-	}
-	template<class T, class Iterator, class Allocator>
-	bool collection<T, Iterator, Allocator>::operator==(const std::list<T> &list) const {
-		iterator this_iter = this->begin();
-		auto list_iter = list.begin();
-		for (; this_iter != this->end() && list_iter != list.end(); ++this_iter, ++list_iter) {
-			if (*this_iter != *list_iter)
-				return false;
-		}
-		return this_iter == this->end() && list_iter == list.end() &&
-			this->size() == list.size() && this->capacity() == list.size();
-	}
-
-	template<class T, class Iterator, class Allocator>
-	bool collection<T, Iterator, Allocator>::operator!=(const std::vector<T> &vector) const {
-		return !(*this == vector);
-	}
-	template<class T, class Iterator, class Allocator>
-	bool collection<T, Iterator, Allocator>::operator!=(const std::list<T> &list) const {
-		return !(*this == list);
 	}
 
 }

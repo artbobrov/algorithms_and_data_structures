@@ -15,7 +15,7 @@ namespace ctl {
 	public:
 		typedef T value_type;
 		typedef Iterator iterator;
-		typedef const iterator const_iterator;
+		typedef iterator const_iterator;
 		typedef std::reverse_iterator<iterator> reverse_iterator;
 		typedef const std::reverse_iterator<iterator> const_reverse_iterator;
 		typedef size_t size_type;

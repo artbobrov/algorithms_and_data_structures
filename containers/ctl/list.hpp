@@ -101,7 +101,7 @@ namespace ctl {
 		typedef Allocator allocator_type;
 		typedef T value_type;
 		typedef __list_iterator<T> iterator;
-		typedef const iterator const_iterator;
+		typedef iterator const_iterator;
 		typedef std::reverse_iterator<iterator> reverse_iterator;
 		typedef const std::reverse_iterator<iterator> const_reverse_iterator;
 		typedef T *pointer;
@@ -135,7 +135,7 @@ namespace ctl {
 		list(Iterator first,
 		     Iterator last,
 		     const Allocator &alloc = Allocator(),
-		     typename std::enable_if<std::__is_input_iterator<Iterator>::value>::type * = 0);
+		     typename std::enable_if<is_input_iterator<Iterator>::value>::type * = 0);
 		inline virtual ~list();
 	public:
 		inline reference at(size_type i) override;
@@ -177,7 +177,7 @@ namespace ctl {
 		iterator insert(const_iterator position,
 		                Iterator first,
 		                Iterator last,
-		                typename std::enable_if<std::__is_input_iterator<Iterator>::value>::type * = 0);
+		                typename std::enable_if<is_input_iterator<Iterator>::value>::type * = 0);
 
 		inline void pop_back() override;
 		inline void pop_front() override;
@@ -271,7 +271,7 @@ namespace ctl {
 	list<T, Allocator>::list(Iterator first,
 	                         Iterator last,
 	                         const Allocator &alloc,
-	                         typename std::enable_if<std::__is_input_iterator<Iterator>::value>::type *): list(alloc) {
+	                         typename std::enable_if<is_input_iterator<Iterator>::value>::type *): list(alloc) {
 		for (; first != last; ++first)
 			this->push_back(*first);
 	}
@@ -477,7 +477,7 @@ namespace ctl {
 	typename list<T, Allocator>::iterator list<T, Allocator>::insert(const_iterator position,
 	                                                                 Iterator first,
 	                                                                 Iterator last,
-	                                                                 typename std::enable_if<std::__is_input_iterator<
+	                                                                 typename std::enable_if<is_input_iterator<
 		                                                                 Iterator>::value>::type *) {
 		iterator result = position;
 		iterator pos = position;
@@ -617,6 +617,7 @@ namespace ctl {
 	list<T, Allocator>::subsequence(size_type from, size_type to) {
 		return subsequence(_head + from, _head + to);
 	}
+
 
 }
 
