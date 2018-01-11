@@ -7,7 +7,6 @@
 #include "abstract/collection.hpp"
 
 namespace ctl {
-
 	template<class T>
 	struct __vector_iterator : public std::iterator<std::random_access_iterator_tag, T> {
 	public:
@@ -18,9 +17,18 @@ namespace ctl {
 		typedef value_type *data;
 		typedef size_t size_type;
 	public:
-		data data_point;
+		mutable data data_point;
 	public:
 		explicit __vector_iterator(data point = nullptr) : data_point(point) {}
+
+		const __vector_iterator &operator=(const __vector_iterator &__x) const {
+			this->data_point = __x.data_point;
+			return *this;
+		}
+		__vector_iterator &operator=(const __vector_iterator &__x) {
+			this->data_point = __x.data_point;
+			return *this;
+		}
 
 		inline __vector_iterator &operator++() {
 			++data_point;
@@ -115,7 +123,7 @@ namespace ctl {
 		inline vector() noexcept : _begin(nullptr), _end(nullptr), _storage_end(nullptr) {}
 		inline explicit vector(const Allocator &alloc);
 		inline explicit vector(size_type count, const Allocator &alloc = Allocator());
-		inline explicit vector(size_type count, const T &value = T(), const Allocator &alloc = Allocator());
+		inline explicit vector(size_type count, const T &value, const Allocator &alloc = Allocator());
 
 		template<class Iterator>
 		inline explicit vector(Iterator begin, Iterator end, const Allocator &alloc = Allocator(),
@@ -305,10 +313,14 @@ namespace ctl {
 	}
 	template<class T, class Allocator>
 	typename vector<T, Allocator>::reference vector<T, Allocator>::at(size_type i) {
+		if (i < capacity() && i > size())
+			_end = _begin + i;
 		return *(_begin + i);
 	}
 	template<class T, class Allocator>
 	typename vector<T, Allocator>::const_reference vector<T, Allocator>::at(size_type i) const {
+		if (i < capacity() && i > size())
+			_end = _begin + i;
 		return *(_begin + i);
 	}
 	template<class T, class Allocator>
@@ -676,12 +688,16 @@ namespace ctl {
 	typename vector<T, Allocator>::size_type vector<T, Allocator>::size() const noexcept {
 		return static_cast<size_type>(_end - _begin);
 	}
+
 	template<class T, class allocator>
 	vector<T, allocator>::operator std::string() const noexcept {
 		using std::to_string;
+
 		std::string output = '[' + to_string(this->size()) + ',' + to_string(this->capacity()) + "] ";
-		for (reference element: *this)
+		for (reference element: *this) {
+//			std::cout << element << std::endl;
 			output += to_string(element) + " ";
+		}
 		return output;
 	}
 	template<class T, class Allocator>
@@ -699,7 +715,6 @@ namespace ctl {
 	vector<T, Allocator>::subsequence(size_type from, size_type to) {
 		return subsequence(_begin + from, _begin + to);
 	}
-
 
 }
 
