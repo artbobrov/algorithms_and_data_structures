@@ -42,6 +42,7 @@ namespace ctl {
 		typedef std::function<bool(const_reference, const_reference)> comparer;
 	public:
 		explicit collection(const Allocator &alloc = Allocator()) : _allocator(alloc) {}
+
 	public:
 		inline allocator_type allocator() const noexcept; // stl
 
@@ -64,9 +65,9 @@ namespace ctl {
 		inline void reverse(); // c#
 		inline void reverse(iterator first, iterator last); // c#
 
-		inline virtual void remove_all(const_reference item); // qt
-		inline virtual void remove_at(int i); // qt
-		inline virtual void remove(const_reference item); // qt
+		inline void remove_all(const_reference item); // qt
+		inline void remove_at(int i); // qt
+		inline void remove(const_reference item); // qt
 		inline reverse_iterator rbegin() noexcept override; // stl
 		inline const_reverse_iterator rbegin() const noexcept override; // stl
 		inline reverse_iterator rend() noexcept override; // stl

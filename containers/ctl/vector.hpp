@@ -7,6 +7,7 @@
 #include "abstract/collection.hpp"
 
 namespace ctl {
+
 	template<class T>
 	struct __vector_iterator : public std::iterator<std::random_access_iterator_tag, T> {
 	public:
@@ -133,8 +134,12 @@ namespace ctl {
 		                       typename std::enable_if<is_input_iterator<Iterator>::value
 			                                               && !is_random_access_iterator<Iterator>::value>::type * = 0);
 		inline vector(const vector<value_type, allocator_type> &other);
-		inline explicit vector(const vector<value_type, allocator_type> &other, const Allocator &alloc);
 		inline vector(vector &&other) noexcept;
+		template<class Container, typename = typename std::enable_if<has_begin_end<Container>::value>::type>
+		vector(const Container &__container): vector(__container.begin(), __container.end()) {}
+
+		inline explicit vector(const vector<value_type, allocator_type> &other, const Allocator &alloc);
+
 		inline vector(std::initializer_list<value_type> il, const Allocator &alloc = Allocator());
 
 		inline virtual ~vector();
@@ -201,6 +206,9 @@ namespace ctl {
 		inline collection<value_type, iterator, allocator_type> &subsequence(const_iterator from,
 		                                                                     const_iterator to) override;
 		inline collection<value_type, iterator, allocator_type> &subsequence(size_type from, size_type to) override;
+	public:
+		vector &operator=(const vector &other);
+		vector &operator=(vector &&other);
 	protected:
 		iterator _begin;
 		iterator _end;
@@ -255,20 +263,16 @@ namespace ctl {
 	template<class T, class Allocator>
 	vector<T, Allocator>::vector(const vector<value_type, allocator_type> &other):
 		collection<value_type, iterator, allocator_type>(other._allocator) {
-		_begin = this->_allocator.allocate(other.capacity());
-		_end = _copy_data(other.begin(), other.end(), _begin);
-		_storage_end = _begin + other.capacity();
+		*this = other;
 	}
+
 	template<class T, class Allocator>
 	vector<T, Allocator>::vector(const vector<value_type, allocator_type> &other, const Allocator &alloc)
 		:collection<value_type, iterator, allocator_type>(alloc), vector(other) {
 	}
 	template<class T, class Allocator>
 	vector<T, Allocator>::vector(vector &&other) noexcept: vector(other._allocator) {
-		_begin = other._begin;
-		_end = other._end;
-		_storage_end = other._storage_end;
-		other._end = other._begin = other._storage_end = nullptr;
+		*this = std::move(other);
 	}
 
 	template<class T, class Allocator>
@@ -688,16 +692,12 @@ namespace ctl {
 	typename vector<T, Allocator>::size_type vector<T, Allocator>::size() const noexcept {
 		return static_cast<size_type>(_end - _begin);
 	}
-
 	template<class T, class allocator>
 	vector<T, allocator>::operator std::string() const noexcept {
 		using std::to_string;
-
 		std::string output = '[' + to_string(this->size()) + ',' + to_string(this->capacity()) + "] ";
-		for (reference element: *this) {
-//			std::cout << element << std::endl;
+		for (reference element: *this)
 			output += to_string(element) + " ";
-		}
 		return output;
 	}
 	template<class T, class Allocator>
@@ -714,6 +714,24 @@ namespace ctl {
 	           typename vector<T, Allocator>::allocator_type> &
 	vector<T, Allocator>::subsequence(size_type from, size_type to) {
 		return subsequence(_begin + from, _begin + to);
+	}
+
+	template<class T, class Allocator>
+	vector<T, Allocator> &vector<T, Allocator>::operator=(const vector &other) {
+		this->_allocator = other._allocator;
+		_begin = this->_allocator.allocate(other.capacity());
+		_end = _copy_data(other.begin(), other.end(), _begin);
+		_storage_end = _begin + other.capacity();
+		return *this;
+	}
+	template<class T, class Allocator>
+	vector<T, Allocator> &vector<T, Allocator>::operator=(vector &&other) {
+		this->_allocator = std::move(other._allocator);
+		_begin = other._begin;
+		_end = other._end;
+		_storage_end = other._storage_end;
+		other._end = other._begin = other._storage_end = nullptr;
+		return *this;
 	}
 
 }
