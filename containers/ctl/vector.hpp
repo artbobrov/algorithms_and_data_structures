@@ -209,6 +209,23 @@ namespace ctl {
 	public:
 		vector &operator=(const vector &other);
 		vector &operator=(vector &&other);
+
+		friend bool operator==(const vector &vec, const std::vector<T> &std_vec) {
+			iterator _collection_iter = vec.begin();
+			auto _container_iter = std_vec.begin();
+
+			for (; _collection_iter != vec.end() && _container_iter != std_vec.end();
+			       ++_collection_iter, ++_container_iter) {
+				if (*_collection_iter != *_container_iter)
+					return false;
+			}
+			return _collection_iter == vec.end() && _container_iter == std_vec.end() &&
+				vec.size() == std_vec.size() && vec.capacity() == std_vec.capacity();
+		}
+
+		friend bool operator!=(const vector &vec, const std::vector<T> std_vec) {
+			return !(vec == std_vec);
+		}
 	protected:
 		iterator _begin;
 		iterator _end;
@@ -718,6 +735,9 @@ namespace ctl {
 
 	template<class T, class Allocator>
 	vector<T, Allocator> &vector<T, Allocator>::operator=(const vector &other) {
+		if (this == &other)
+			return *this;
+
 		this->_allocator = other._allocator;
 		_begin = this->_allocator.allocate(other.capacity());
 		_end = _copy_data(other.begin(), other.end(), _begin);
@@ -726,6 +746,9 @@ namespace ctl {
 	}
 	template<class T, class Allocator>
 	vector<T, Allocator> &vector<T, Allocator>::operator=(vector &&other) {
+		if (this == &other)
+			return *this;
+
 		this->_allocator = std::move(other._allocator);
 		_begin = other._begin;
 		_end = other._end;

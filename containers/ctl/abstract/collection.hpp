@@ -17,6 +17,7 @@
 #include <set>
 
 namespace ctl {
+
 	template<class T, class Iterator, class Allocator = std::allocator<T> >
 	class collection
 		: public object,
@@ -97,10 +98,23 @@ namespace ctl {
 			return _collection_iter == __collection.end() && _container_iter == __container.end() &&
 				__collection.size() == __container.size();
 		}
+
 		template<class Container, typename = typename std::enable_if<has_begin_end<Container>::value>::type>
 		friend bool operator!=(const collection<T, Iterator, Allocator> &__collection, const Container &__container) {
 			return !(__collection == __container);
 		}
+
+		/*
+		// TODO: y it isn't working?
+		template<class Container, typename = typename std::enable_if<has_begin_end<Container>::value>::type>
+		friend bool operator==(const Container &__container, const collection<T, Iterator, Allocator> &__collection) {
+			return __collection == __container;
+		}
+
+		template<class Container, typename = typename std::enable_if<has_begin_end<Container>::value>::type>
+		friend bool operator!=(const Container &__container, const collection<T, Iterator, Allocator> &__collection) {
+			return __collection != __container;
+		}*/
 	protected:
 		allocator_type _allocator;
 	};
