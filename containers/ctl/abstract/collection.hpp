@@ -10,13 +10,13 @@
 #include "iterable.hpp"
 #include "reservable.hpp"
 #include "modifiable.hpp"
+#include "iterator_meta.hpp"
 
 #include <vector>
 #include <list>
 #include <set>
 
 namespace ctl {
-
 	template<class T, class Iterator, class Allocator = std::allocator<T> >
 	class collection
 		: public object,
@@ -28,10 +28,9 @@ namespace ctl {
 		typedef Allocator allocator_type;
 		typedef T value_type;
 		typedef Iterator iterator;
-		typedef const iterator const_iterator;
+		typedef iterator const_iterator;
 		typedef std::reverse_iterator<iterator> reverse_iterator;
 		typedef const std::reverse_iterator<iterator> const_reverse_iterator;
-		typedef T *pointer;
 		typedef value_type &reference;
 		typedef value_type const &const_reference;
 		typedef size_t size_type;
@@ -43,31 +42,32 @@ namespace ctl {
 		typedef std::function<bool(const_reference, const_reference)> comparer;
 	public:
 		explicit collection(const Allocator &alloc = Allocator()) : _allocator(alloc) {}
+
 	public:
 		inline allocator_type allocator() const noexcept; // stl
 
-		inline bool contains(const_reference item) const; // qt 
-		inline size_type count(const_reference item) const noexcept; // qt 
+		inline bool contains(const_reference item) const; // qt
+		inline size_type count(const_reference item) const noexcept; // qt
 		inline const_reverse_iterator crbegin() const noexcept override; // stl
 		inline const_reverse_iterator crend() const noexcept override; // stl
 
 		inline void foreach(action act); // c#
 		inline virtual collection<value_type, iterator, allocator_type> &filter(conformer conform) = 0;
-		inline void fill(const T &value); // qt 
-		inline void fill(iterator first, iterator last, const T &value); // qt 
+		inline void fill(const T &value); // qt
+		inline void fill(iterator first, iterator last, const T &value); // qt
 		inline void fill(const T &value, size_type size); // qt
 
-		inline size_type index_of(const_reference value, size_type first, size_type last) const; // qt 
-		inline iterator index_of(const_reference value, iterator first, iterator last) const; // myself 
+		inline size_type index_of(const_reference value, size_type first, size_type last) const; // qt
+		inline iterator index_of(const_reference value, iterator first, iterator last) const; // myself
 
 		inline void map(map_action mapper);
 
 		inline void reverse(); // c#
 		inline void reverse(iterator first, iterator last); // c#
 
-		inline virtual void remove_all(const_reference item); // qt 
-		inline virtual void remove_at(int i); // qt 
-		inline virtual void remove(const_reference item); // qt 
+		inline void remove_all(const_reference item); // qt
+		inline void remove_at(int i); // qt
+		inline void remove(const_reference item); // qt
 		inline reverse_iterator rbegin() noexcept override; // stl
 		inline const_reverse_iterator rbegin() const noexcept override; // stl
 		inline reverse_iterator rend() noexcept override; // stl
@@ -75,13 +75,32 @@ namespace ctl {
 
 		inline virtual std::vector<value_type> to_std_vector() const noexcept; // qt
 		inline virtual std::list<value_type> to_std_list() const noexcept; // c#
-		inline virtual std::set<value_type> to_std_set() const noexcept; // c# 
+		inline virtual std::set<value_type> to_std_set() const noexcept; // c#
 		inline bool true_for_all(conformer conform); // c#
 
 		inline virtual collection<value_type, iterator, allocator_type> &subsequence(iterator from,
 		                                                                             iterator to) = 0; // swift
 		inline virtual collection<value_type, iterator, allocator_type> &subsequence(size_type from,
 		                                                                             size_type to) = 0; // swift
+
+	public:
+		template<class Container, typename = typename std::enable_if<has_begin_end<Container>::value>::type>
+		friend bool operator==(const collection<T, Iterator, Allocator> &__collection, const Container &__container) {
+			iterator _collection_iter = __collection.begin();
+			auto _container_iter = __container.begin();
+
+			for (; _collection_iter != __collection.end() && _container_iter != __container.end();
+			       ++_collection_iter, ++_container_iter) {
+				if (*_collection_iter != *_container_iter)
+					return false;
+			}
+			return _collection_iter == __collection.end() && _container_iter == __container.end() &&
+				__collection.size() == __container.size();
+		}
+		template<class Container, typename = typename std::enable_if<has_begin_end<Container>::value>::type>
+		friend bool operator!=(const collection<T, Iterator, Allocator> &__collection, const Container &__container) {
+			return !(__collection == __container);
+		}
 	protected:
 		allocator_type _allocator;
 	};
