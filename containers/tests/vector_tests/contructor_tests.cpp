@@ -1,15 +1,13 @@
 #include "gtest/gtest.h"
 #include "vector.hpp"
-#include "extra/extra_std_functions.hpp"
+#include "../extra/extra_std_functions.hpp"
 
 #include <ctime>
 #include <vector>
 #include <random>
 
 #include <thread>
-using namespace std::chrono_literals;
-using std::cout;
-using std::endl;
+
 
 size_t get_size(size_t max_size = 1000) {
 	std::mt19937 gen(static_cast<unsigned int>(time(0)));
