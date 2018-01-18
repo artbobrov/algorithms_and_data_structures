@@ -5,11 +5,11 @@
 #ifndef COLLECTIONS_COLLECTION_HPP
 #define COLLECTIONS_COLLECTION_HPP
 
-#include "object.hpp"
-#include "element_accessible.hpp"
-#include "iterable.hpp"
-#include "reservable.hpp"
-#include "modifiable.hpp"
+#include "abstract/base/object.hpp"
+#include "abstract/element_accessible/random_element_accessible.hpp"
+#include "abstract/iterable/iterable.hpp"
+#include "abstract/capacity/reservable.hpp"
+#include "abstract/modifiable/element_accessible_modifiable.hpp"
 #include "iterator_meta.hpp"
 
 #include <vector>
@@ -21,10 +21,10 @@ namespace ctl {
 	template<class T, class Iterator, class Allocator = std::allocator<T> >
 	class collection
 		: public object,
-		  public element_accessible<T, Iterator>,
+		  public random_element_accessible<T>,
 		  public iterable<T, Iterator>,
-		  public reservable<T>,
-		  public modifiable<T, Iterator, Allocator> {
+		  public size_accessible<T>,
+		  public element_accessible_modifiable<T, Iterator> {
 	public:
 		typedef Allocator allocator_type;
 		typedef T value_type;

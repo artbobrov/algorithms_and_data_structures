@@ -6,7 +6,7 @@
 #define COLLECTIONS_ENUMERABLE_HPP
 
 #include <functional>
-#include "object.hpp"
+#include "abstract/base/object.hpp"
 
 namespace ctl {
 
