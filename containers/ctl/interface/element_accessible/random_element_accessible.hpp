@@ -14,25 +14,15 @@ namespace ctl {
 	public:
 		typedef T value_type;
 		typedef value_type &reference;
-		typedef value_type const &const_reference;
+		typedef const value_type &const_reference;
 		typedef size_t size_type;
 	public:
 		inline virtual reference at(size_type i) = 0; // stl
 		inline virtual const_reference at(size_type i) const = 0; // stl
 
-		inline reference operator[](size_type i); // stl
-		inline const_reference operator[](size_type i) const; // stl
+		inline reference operator[](size_type i) { return at(i); }  // stl
+		inline const_reference operator[](size_type i) const { return at(i); } // stl
 	};
-	template<class T>
-	typename random_element_accessible<T>::reference random_element_accessible<T>::operator[](size_type i) {
-		return at(i);
-	}
-	template<class T>
-	typename random_element_accessible<T>::const_reference
-	random_element_accessible<T>::operator[](size_type i) const {
-		return at(i);
-	}
-
 }
 
 #endif //COLLECTIONS_ELEMENT_ACCESSIBLE_HPP

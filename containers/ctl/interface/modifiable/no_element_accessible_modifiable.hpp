@@ -10,7 +10,7 @@
 #include "modifiable.hpp"
 namespace ctl {
 	template<class T, class Iterator>
-	class no_element_accessible_modifiable : public modifiable<T> {
+	class no_element_accessible_modifiable {
 	public:
 		typedef T value_type;
 		typedef Iterator iterator;

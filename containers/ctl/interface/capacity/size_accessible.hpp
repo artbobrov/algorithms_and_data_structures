@@ -14,18 +14,9 @@ namespace ctl {
 	public:
 		typedef size_t size_type;
 	public:
-		inline virtual bool empty() const noexcept; // stl
-		inline virtual size_type max_size() const noexcept; // stl
+		inline virtual bool empty() const noexcept { return !size(); } // stl
+		inline virtual size_type max_size() const noexcept { return std::numeric_limits<size_type>::max(); } // stl
 		inline virtual size_type size() const noexcept = 0; // stl
 	};
-	template<class T>
-	typename size_accessible<T>::size_type size_accessible<T>::max_size() const noexcept {
-		return std::numeric_limits<size_type>::max();
-	}
-	template<class T>
-	bool size_accessible<T>::empty() const noexcept {
-		return !size();
-	}
-
 }
 #endif //CONTAINERS_SIZE_ACCESSIBLE_HPP

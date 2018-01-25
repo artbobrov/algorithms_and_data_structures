@@ -13,10 +13,12 @@
 
 namespace ctl {
 	template<class T>
-	class iterable: public size_accessible<T> {
+	class reservable : public size_accessible<T> {
 	public:
 		typedef size_t size_type;
 	public:
+		inline virtual size_type capacity() const noexcept = 0;
+
 		inline virtual void reserve(size_type n) = 0; // stl
 
 		inline virtual void shrink_to_fit() noexcept = 0; // stl

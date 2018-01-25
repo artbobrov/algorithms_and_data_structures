@@ -10,7 +10,7 @@
 #include "abstract/iterable/iterable.hpp"
 #include "abstract/capacity/reservable.hpp"
 #include "abstract/modifiable/element_accessible_modifiable.hpp"
-#include "iterator_meta.hpp"
+#include "abstract-base/meta/iterator_meta.hpp"
 
 #include <vector>
 #include <list>
@@ -47,13 +47,13 @@ namespace ctl {
 	public:
 		inline allocator_type allocator() const noexcept; // stl
 
-		inline bool contains(const_reference item) const; // qt
-		inline size_type count(const_reference item) const noexcept; // qt
-		inline const_reverse_iterator crbegin() const noexcept override; // stl
-		inline const_reverse_iterator crend() const noexcept override; // stl
+//		inline bool contains(const_reference item) const; // qt
+//		inline size_type count(const_reference item) const noexcept; // qt
+//		inline const_reverse_iterator crbegin() const noexcept override; // stl
+//		inline const_reverse_iterator crend() const noexcept override; // stl
 
-		inline void foreach(action act); // c#
-		inline virtual collection<value_type, iterator, allocator_type> &filter(conformer conform) = 0;
+//		inline void foreach(action act); // c#
+//		inline virtual collection<value_type, iterator, allocator_type> &filter(conformer conform) = 0;
 		inline void fill(const T &value); // qt
 		inline void fill(iterator first, iterator last, const T &value); // qt
 		inline void fill(const T &value, size_type size); // qt
@@ -61,28 +61,28 @@ namespace ctl {
 		inline size_type index_of(const_reference value, size_type first, size_type last) const; // qt
 		inline iterator index_of(const_reference value, iterator first, iterator last) const; // myself
 
-		inline void map(map_action mapper);
+//		inline void map(map_action mapper);
 
-		inline void reverse(); // c#
-		inline void reverse(iterator first, iterator last); // c#
+//		inline void reverse(); // c#
+//		inline void reverse(iterator first, iterator last); // c#
 
 		inline void remove_all(const_reference item); // qt
 		inline void remove_at(int i); // qt
 		inline void remove(const_reference item); // qt
-		inline reverse_iterator rbegin() noexcept override; // stl
-		inline const_reverse_iterator rbegin() const noexcept override; // stl
-		inline reverse_iterator rend() noexcept override; // stl
-		inline const_reverse_iterator rend() const noexcept override; // stl
+//		inline reverse_iterator rbegin() noexcept override; // stl
+//		inline const_reverse_iterator rbegin() const noexcept override; // stl
+//		inline reverse_iterator rend() noexcept override; // stl
+//		inline const_reverse_iterator rend() const noexcept override; // stl
 
 		inline virtual std::vector<value_type> to_std_vector() const noexcept; // qt
 		inline virtual std::list<value_type> to_std_list() const noexcept; // c#
 		inline virtual std::set<value_type> to_std_set() const noexcept; // c#
-		inline bool true_for_all(conformer conform); // c#
+//		inline bool true_for_all(conformer conform); // c#
 
-		inline virtual collection<value_type, iterator, allocator_type> &subsequence(iterator from,
-		                                                                             iterator to) = 0; // swift
-		inline virtual collection<value_type, iterator, allocator_type> &subsequence(size_type from,
-		                                                                             size_type to) = 0; // swift
+//		inline virtual collection<value_type, iterator, allocator_type> &subsequence(iterator from,
+//		                                                                             iterator to) = 0; // swift
+//		inline virtual collection<value_type, iterator, allocator_type> &subsequence(size_type from,
+//		                                                                             size_type to) = 0; // swift
 
 	public:
 		template<class Container, typename = typename std::enable_if<has_begin_end<Container>::value>::type>

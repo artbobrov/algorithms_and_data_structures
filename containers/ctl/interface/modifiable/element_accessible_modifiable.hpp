@@ -12,7 +12,7 @@
 
 namespace ctl {
 	template<class T, class Iterator>
-	class element_accessible_modifiable : public modifiable<T> {
+	class element_accessible_modifiable {
 	public:
 		typedef T value_type;
 		typedef Iterator iterator;
