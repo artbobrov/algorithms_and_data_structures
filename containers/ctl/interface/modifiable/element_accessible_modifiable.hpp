@@ -25,19 +25,23 @@ namespace ctl {
 		typedef size_t size_type;
 		typedef std::ptrdiff_t difference_type;
 	public:
-		inline virtual void append(const modifiable<value_type> &value) = 0;
+		inline virtual void append(modifiable<value_type> &value) = 0;
 		inline void append(const_reference value) { push_back(value); } // qt
 		inline void append(value_type &&value) { push_back(std::move(value)); } // qt
 
 		inline virtual iterator erase(const_iterator position) = 0;
+		inline virtual iterator erase(size_type position) = 0;
 		inline virtual iterator erase(const_iterator first, const_iterator last) = 0;
+		inline virtual iterator erase(size_type first, size_type last) = 0;
 
 		inline virtual iterator insert(const_iterator before, const T &value) = 0; // stl
 		inline virtual iterator insert(size_type i, const T &value) = 0; // qt
 		inline virtual iterator insert(const_iterator before, value_type &&value) = 0; // stl
+		inline virtual iterator insert(size_type i, value_type &&value) = 0; // stl
 		inline virtual iterator insert(const_iterator before, size_type count, const T &value) = 0; // stl
-		inline virtual iterator insert(const_iterator position, std::initializer_list<value_type> il) = 0; // stl
 		inline virtual iterator insert(size_type i, size_type count, const T &value) = 0; // qt
+		inline virtual iterator insert(const_iterator position, std::initializer_list<value_type> il) = 0; // stl
+		inline virtual iterator insert(size_type i, std::initializer_list<value_type> il) = 0; // stl
 
 		inline virtual void pop_back() = 0; // stl
 		inline virtual void pop_front() = 0; // qt
@@ -46,6 +50,9 @@ namespace ctl {
 		inline virtual void push_front(const_reference value) = 0; // qt
 		inline virtual void push_front(value_type &&value) = 0; // qt
 
+		inline virtual void remove_all(const_reference item) = 0; // qt
+		inline virtual void remove_at(int i) = 0; // qt
+		inline virtual void remove(const_reference item) = 0; // qt
 		inline void remove_last() { pop_back(); } // qt
 		inline void remove_first() { pop_front(); } // qt
 

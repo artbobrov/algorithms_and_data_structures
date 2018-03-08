@@ -6,10 +6,11 @@
 #define CONTAINERS_SEQUENCE_HPP
 
 #include "../interface/interfaces.hpp"
+#include "../interface/meta.hpp"
 
 namespace ctl {
 	template<class T, class Iterator>
-	class sequence : public object, public iterable<Iterator> {
+	class sequence : public iterable<Iterator> {
 	public:
 		typedef T value_type;
 		typedef Iterator iterator;
@@ -22,29 +23,30 @@ namespace ctl {
 		typedef std::ptrdiff_t difference_type;
 
 		typedef std::function<bool(const_reference)> conformer;
-		typedef std::function<void(const_reference)> action;
-		typedef std::function<reference(reference)> map_action;
+		typedef std::function<void(reference)> action;
 		typedef std::function<bool(const_reference, const_reference)> comparer;
 	public:
 		inline bool contains(const_reference item) const; // qt
 		inline bool contains(conformer predicate) const; // qt
 
 		inline size_type count(const_reference item) const noexcept; // qt
-		inline size_type count_if(conformer predicate) const noexcept; // qt
+		inline size_type count(conformer predicate) const noexcept; // qt
 
+		inline sequence<std::pair<size_type, iterator>, iterator> enumerated() const noexcept = 0;
 
-		inline iterator first_if(conformer predicate) const noexcept; // qt
-		inline void for_each(action act); // c#
-
-		inline void map(map_action mapper);
-		template<typename = typename std::enable_if<is_comparable<T, T>::value>::type>
-		inline iterator min();
-		inline iterator min(comparer comp);
-		template<typename = typename std::enable_if<is_comparable<T, T>::value>::type>
-		inline iterator max();
-		inline iterator max(comparer comp);
-
+		inline void fill(const T &value); // qt
 		virtual const sequence &filter(conformer predicate) = 0;
+		virtual void filtered(conformer predicate) = 0;
+		inline iterator first(conformer predicate) const noexcept; // qt
+		inline void for_each(action act) noexcept; // c#
+
+		template<typename = typename std::enable_if<is_comparable<T, T>::value>::type>
+		inline iterator min() const;
+		inline iterator min(comparer comp) const;
+
+		template<typename = typename std::enable_if<is_comparable<T, T>::value>::type>
+		inline iterator max() const;
+		inline iterator max(comparer comp) const;
 
 		virtual const sequence &prefix(size_type max_length) = 0;
 		virtual const sequence &prefix(conformer predicate) = 0;
@@ -52,13 +54,11 @@ namespace ctl {
 		virtual const sequence &suffix(size_type max_length) = 0;
 		virtual const sequence &suffix(conformer predicate) = 0;
 
-		inline void reverse(); // c#
-		inline virtual void reverse(iterator first, iterator last) = 0; // c#
+		inline bool true_for_all(conformer conform) const; // c#
 
-		inline virtual sequence &subsequence(iterator from,
-		                                    iterator to) = 0; // swift
-
-		inline bool true_for_all(conformer conform); // c#
+		inline virtual std::vector<value_type> to_std_vector() const; // qt
+		inline virtual std::list<value_type> to_std_list() const; // c#
+		inline virtual std::set<value_type> to_std_set() const; // c#
 	};
 	template<class T, class Iterator>
 	bool sequence<T, Iterator>::contains(const T &item) const {
@@ -68,92 +68,103 @@ namespace ctl {
 		return false;
 	}
 	template<class T, class Iterator>
-	bool sequence<T, Iterator>::contains(conformer predicate) const {
+	bool sequence<T, Iterator>::contains(sequence::conformer predicate) const {
 		for (const_reference element: *this)
 			if (predicate(element))
 				return true;
 		return false;
 	}
 	template<class T, class Iterator>
-	typename sequence<T,Iterator>::size_type sequence<T, Iterator>::count(const T &item) const noexcept {
+	typename sequence<T, Iterator>::size_type sequence<T, Iterator>::count(const T &item) const noexcept {
 		size_type _count = 0;
 		for (const_reference element: *this)
 			if (element == item)
 				++_count;
+
 		return _count;
 	}
 	template<class T, class Iterator>
-	typename sequence<T,Iterator>::size_type sequence<T, Iterator>::count_if(conformer predicate) const noexcept {
+	typename sequence<T, Iterator>::size_type sequence<T,
+	                                                   Iterator>::count(sequence::conformer predicate) const noexcept {
 		size_type _count = 0;
 		for (const_reference element: *this)
 			if (predicate(element))
 				++_count;
+
 		return _count;
 	}
 	template<class T, class Iterator>
-	typename sequence<T,Iterator>::iterator sequence<T, Iterator>::first_if(conformer predicate) const noexcept {
-		iterator _iter = this->begin();
-		for (; _iter != this->end() && !predicate(*_iter); ++_iter) {}
-		return _iter;
+	void sequence<T, Iterator>::fill(const T &value) {
+		for (iterator _it = this->begin(); _it != this->end(); ++_it)
+			*_it = value;
 	}
+
 	template<class T, class Iterator>
-	void sequence<T, Iterator>::for_each(action act) {
-		for (const_reference element: *this)
+	typename sequence<T, Iterator>::iterator sequence<T, Iterator>::first(conformer predicate) const noexcept {
+		iterator _first = this->begin();
+		for (; _first != this->end() && !predicate(*_first); ++_first) {}
+		return _first;
+	}
+
+	template<class T, class Iterator>
+	void sequence<T, Iterator>::for_each(action act) noexcept {
+		for (reference element: *this)
 			act(element);
 	}
+
 	template<class T, class Iterator>
-	void sequence<T, Iterator>::map(map_action mapper) {
-		for (reference element: *this)
-			element = mapper(element);
+	template<typename>
+	typename sequence<T, Iterator>::sequence::iterator sequence<T, Iterator>::min() const {
+		iterator _min_value = this->begin();
+		for (iterator _it = this->begin(); _it != this->end(); ++_it)
+			if (*_it < *_min_value)
+				_min_value = _it;
+		return _min_value;
+	}
+	template<class T, class Iterator>
+	typename sequence<T, Iterator>::iterator sequence<T, Iterator>::min(comparer comp) const {
+		iterator _min_value = this->begin();
+		for (iterator _it = this->begin(); _it != this->end(); ++_it)
+			if (comp(*_it, *_min_value))
+				_min_value = _it;
+		return _min_value;
 	}
 	template<class T, class Iterator>
 	template<typename>
-	typename sequence<T,Iterator>::iterator sequence<T, Iterator>::min() {
-		iterator _min = this->begin(), _iter = this->begin();
-		for (; _iter != this->end(); ++_iter)
-			if (*_iter < *_min)
-				_min = _iter;
+	typename sequence<T, Iterator>::iterator sequence<T, Iterator>::max() const {
+		iterator _max_value = this->begin();
+		for (iterator _it = this->begin(); _it != this->end(); ++_it)
+			if (*_it > *_max_value)
+				_max_value = _it;
+		return _max_value;
+	}
 
-		return _min;
+	template<class T, class Iterator>
+	typename sequence<T, Iterator>::iterator sequence<T, Iterator>::max(comparer comp) const {
+		iterator _min_value = this->begin();
+		for (iterator _it = this->begin(); _it != this->end(); ++_it)
+			if (comp(*_min_value, *_it))
+				_min_value = _it;
+		return _min_value;
 	}
 	template<class T, class Iterator>
-	typename sequence<T,Iterator>::iterator sequence<T, Iterator>::min(comparer comp) {
-		iterator _min = this->begin(), _iter = this->begin();
-		for (; _iter != this->end(); ++_iter)
-			if (!comp(*_iter, *_min))
-				_min = _iter;
-
-		return _min;
-	}
-	template<class T, class Iterator>
-	template<typename>
-	typename sequence<T,Iterator>::iterator sequence<T, Iterator>::max() {
-		iterator _max = this->begin(), _iter = this->begin();
-		for (; _iter != this->end(); ++_iter)
-			if (*_iter > *_max)
-				_max = _iter;
-
-		return _max;
-	}
-	template<class T, class Iterator>
-	typename sequence<T,Iterator>::iterator sequence<T, Iterator>::max(comparer comp) {
-		iterator _max = this->begin(), _iter = this->begin();
-		for (; _iter != this->end(); ++_iter)
-			if (comp(*_iter, *_max))
-				_max = _iter;
-
-		return _max;
-	}
-	template<class T, class Iterator>
-	bool sequence<T, Iterator>::true_for_all(sequence::conformer conform) {
+	bool sequence<T, Iterator>::true_for_all(conformer conform) const {
 		for (const_reference element: *this)
 			if (!conform(element))
 				return false;
 		return true;
 	}
 	template<class T, class Iterator>
-	void sequence<T, Iterator>::reverse() {
-		reverse(this->begin(), this->end());
+	std::vector<typename sequence<T, Iterator>::value_type> sequence<T, Iterator>::to_std_vector() const {
+		return std::vector<value_type>(this->begin(), this->end());
+	}
+	template<class T, class Iterator>
+	std::list<typename sequence<T, Iterator>::value_type> sequence<T, Iterator>::to_std_list() const {
+		return std::list<value_type>(this->begin(), this->end());
+	}
+	template<class T, class Iterator>
+	std::set<typename sequence<T, Iterator>::value_type> sequence<T, Iterator>::to_std_set() const {
+		return std::set<value_type>(this->begin(), this->end());
 	}
 }
 
