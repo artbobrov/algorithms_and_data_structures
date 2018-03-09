@@ -32,7 +32,7 @@ namespace ctl {
 		inline size_type count(const_reference item) const noexcept; // qt
 		inline size_type count(conformer predicate) const noexcept; // qt
 
-		inline sequence<std::pair<size_type, iterator>, iterator> enumerated() const noexcept = 0;
+		inline virtual sequence<std::pair<size_type, iterator>, iterator> enumerated() const noexcept = 0;
 
 		inline void fill(const T &value); // qt
 		virtual const sequence &filter(conformer predicate) = 0;

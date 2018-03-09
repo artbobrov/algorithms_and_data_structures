@@ -18,8 +18,6 @@ namespace ctl {
 		typedef size_t size_type;
 		typedef std::ptrdiff_t difference_type;
 	public:
-		inline virtual size_type capacity() const noexcept = 0; // stl
-
 		inline virtual void resize(size_type count) = 0; // stl
 		inline virtual void resize(size_type count, const T &value) = 0; // stl
 	};

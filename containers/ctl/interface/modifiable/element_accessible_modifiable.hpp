@@ -56,7 +56,7 @@ namespace ctl {
 		inline void remove_last() { pop_back(); } // qt
 		inline void remove_first() { pop_front(); } // qt
 
-		inline virtual void resize(size_type count) = 0;
+//		inline virtual void resize(size_type count) = 0;
 		inline virtual void resize(size_type count, const value_type &value) = 0;
 	};
 }

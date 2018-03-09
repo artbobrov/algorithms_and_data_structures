@@ -34,6 +34,7 @@ namespace ctl {
 		typedef std::function<bool(const_reference, const_reference)> comparer;
 	public:
 		explicit collection(const Allocator &alloc = Allocator()) : _allocator(alloc) {}
+		inline virtual ~collection() = default;
 	public:
 		inline allocator_type allocator() const noexcept { return _allocator; } // stl
 		virtual inline void fill(iterator first, iterator last, const T &value) = 0; // qt
@@ -50,7 +51,6 @@ namespace ctl {
 		                                                                             iterator to) = 0; // swift
 		inline virtual collection<value_type, iterator, allocator_type> &subsequence(size_type from,
 		                                                                             size_type to) = 0; // swift
-	public:
 	protected:
 		allocator_type _allocator;
 	};
