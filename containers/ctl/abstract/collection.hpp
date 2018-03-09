@@ -14,8 +14,7 @@
 
 namespace ctl {
 	template<class T, class Iterator, class Allocator = std::allocator<T> >
-	class collection : public sequence<T, Iterator>,
-	                   public size_accessible<T> {
+	class collection : public sequence<T, Iterator> {
 	public:
 		typedef Allocator allocator_type;
 		typedef T value_type;

@@ -9,7 +9,6 @@
 #include <functional>
 
 namespace ctl {
-	template<class T>
 	class size_accessible {
 	public:
 		typedef size_t size_type;

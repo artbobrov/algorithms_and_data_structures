@@ -39,7 +39,7 @@ namespace ctl {
 	};
 	template<class Iterator>
 	typename iterable<Iterator>::size_type iterable<Iterator>::distance(const_iterator first, const_iterator last) {
-		return static_cast<size_type>(first - last);
+		return static_cast<size_type>(last - first);
 	}
 }
 

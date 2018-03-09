@@ -8,11 +8,14 @@
 #include <iterator>
 #include <memory>
 
-#include "modifiable.hpp"
+#include "../interfaces.hpp"
 
 namespace ctl {
 	template<class T, class Iterator>
-	class element_accessible_modifiable {
+	class element_accessible_modifiable : public random_element_accessible<T>,
+	                                      public modifiable<T>,
+	                                      public size_accessible,
+	                                      public virtual iterable<Iterator> {
 	public:
 		typedef T value_type;
 		typedef Iterator iterator;
@@ -25,7 +28,7 @@ namespace ctl {
 		typedef size_t size_type;
 		typedef std::ptrdiff_t difference_type;
 	public:
-		inline virtual void append(modifiable<value_type> &value) = 0;
+		inline virtual void append(element_accessible_modifiable<value_type, iterator> &value) = 0;
 		inline void append(const_reference value) { push_back(value); } // qt
 		inline void append(value_type &&value) { push_back(std::move(value)); } // qt
 
@@ -56,7 +59,7 @@ namespace ctl {
 		inline void remove_last() { pop_back(); } // qt
 		inline void remove_first() { pop_front(); } // qt
 
-//		inline virtual void resize(size_type count) = 0;
+		inline virtual void resize(size_type count) = 0;
 		inline virtual void resize(size_type count, const value_type &value) = 0;
 	};
 }

@@ -12,8 +12,7 @@
 #include "size_accessible.hpp"
 
 namespace ctl {
-	template<class T>
-	class reservable : public size_accessible<T> {
+	class reservable {
 	public:
 		typedef size_t size_type;
 	public:

@@ -10,7 +10,7 @@
 
 namespace ctl {
 	template<class T, class Iterator>
-	class sequence : public iterable<Iterator> {
+	class sequence : public virtual iterable<Iterator> {
 	public:
 		typedef T value_type;
 		typedef Iterator iterator;
