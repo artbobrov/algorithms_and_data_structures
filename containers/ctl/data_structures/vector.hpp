@@ -38,8 +38,12 @@ namespace ctl {
 			return *this;
 		}
 
-		inline bool operator==(const __vector_iterator &other) { return other.data_point == data_point; }
-		inline bool operator!=(const __vector_iterator &other) { return !(*this == other); }
+		friend inline bool operator==(const __vector_iterator &__x, const __vector_iterator &__y) {
+			return __x.data_point == __y.data_point;
+		}
+		friend inline bool operator!=(const __vector_iterator &__x, const __vector_iterator &__y) {
+			return !(__x == __y);
+		}
 
 		inline reference operator*() { return *data_point; }
 		inline const_reference operator*() const { return *data_point; }
@@ -72,23 +76,22 @@ namespace ctl {
 			data_point -= idx;
 			return *this;
 		}
-		friend inline size_type operator-(const __vector_iterator &__x, const __vector_iterator &__y) {
-			return static_cast<size_type>(__x.data_point - __y.data_point);
+		friend inline long long operator-(const __vector_iterator &__x, const __vector_iterator &__y) {
+			return static_cast<long long>(__x.data_point - __y.data_point);
 		}
 
-		inline bool operator<(const __vector_iterator &rhs) {
-			return data_point < rhs.data_point;
+		friend bool operator<(const __vector_iterator &lhs, const __vector_iterator &rhs) {
+			return lhs.data_point < rhs.data_point;
 		}
-		inline bool operator>(const __vector_iterator &rhs) {
-			return rhs < *this;
+		friend bool operator>(const __vector_iterator &lhs, const __vector_iterator &rhs) {
+			return rhs < lhs;
 		}
-		inline bool operator<=(const __vector_iterator &rhs) {
-			return !(rhs < *this);
+		friend bool operator<=(const __vector_iterator &lhs, const __vector_iterator &rhs) {
+			return !(rhs < lhs);
 		}
-		inline bool operator>=(const __vector_iterator &rhs) {
-			return !(*this < rhs);
+		friend bool operator>=(const __vector_iterator &lhs, const __vector_iterator &rhs) {
+			return !(lhs < rhs);
 		}
-
 	};
 
 	template<class T>
@@ -136,10 +139,12 @@ namespace ctl {
 		iterator _begin, _end, _storage_end;
 	private:
 		inline void _deallocate_data(iterator from, iterator to);
-		inline iterator _copy_data(iterator begin, iterator end, iterator to); // returns end iterator to copied data
 		inline size_type _recommend(size_type new_size);
 		inline void _destruct_at_end(iterator new_end);
+		inline void _destruct(iterator first, iterator last);
 		inline void _construct_at_end(size_type n); // with default contructor
+		template<class Iterator, typename = typename std::enable_if<is_forward_iterator<Iterator>::value>::type>
+		inline void _construct_at_end(Iterator first, Iterator last, const_reference __x); // with default contructor
 		inline void _construct_at_end(size_type n, const_reference __x); // with default contructor
 		template<class Iterator, typename = typename std::enable_if<is_forward_iterator<Iterator>::value>::type>
 		inline void _construct_at_end(Iterator begin,
@@ -176,32 +181,35 @@ namespace ctl {
 		inline reference at(size_type i) override;
 		inline const_reference at(size_type i) const override;
 
-		inline reference back() override;
-		inline const_reference back() const override;
-		inline iterator begin() noexcept override;
-		inline const_iterator begin() const noexcept override;
+		inline reference back() override { return *(_end - 1); }
+		inline const_reference back() const override { return *(_end - 1); }
+		inline iterator begin() noexcept override { return _begin; }
+		inline const_iterator begin() const noexcept override { return _begin; }
 
-		inline const_iterator cbegin() const noexcept override;
-		inline const_iterator cend() const noexcept override;
-		inline const_reverse_iterator crbegin() const noexcept override;
-		inline const_reverse_iterator crend() const noexcept override;
-		inline size_type capacity() const noexcept override;
-		inline void clear() noexcept override;
+		inline size_type capacity() const noexcept override { return static_cast<size_type>(_storage_end - _begin); }
+		inline void clear() noexcept override { _destruct_at_end(_begin); }
 
+		// FIXME: change to shared_ptr
 		inline sequence<std::pair<size_type, iterator>, iterator> enumerated() const noexcept override;
 		inline iterator erase(const_iterator position) override;
-		inline iterator erase(size_type position) override;
+		inline iterator erase(size_type position) override { return erase(begin() + position); }
 		inline iterator erase(const_iterator first, const_iterator last) override;
-		inline iterator erase(size_type first, size_type last) override;
-		inline iterator end() noexcept override;
-		inline const_iterator end() const noexcept override;
+		inline iterator erase(size_type first, size_type last) override {
+			return erase(begin() + first, begin() + last);
+		}
+		inline iterator end() noexcept override { return _end; }
+		inline const_iterator end() const noexcept override { return _end; }
 
+		inline void fill(size_type first, size_type last, const T &value) override {
+			fill(_begin + first, _begin + last, value);
+		}
 		inline void fill(iterator first, iterator last, const T &value) override;
 		inline void fill(const T &value, size_type size) override;
-		inline const sequence<value_type, iterator> &filter(conformer predicate) override;
-		inline void filtered(conformer predicate) override;
-		inline reference front() override;
-		inline const_reference front() const override;
+		inline void filter(conformer predicate) override;
+		// FIXME: change to shared_ptr
+		inline sequence<value_type, iterator> filtered(conformer predicate) override;
+		inline reference front() override { return *_begin; }
+		inline const_reference front() const override { return *_begin; }
 
 		inline iterator insert(const_iterator before, const T &value) override;
 		inline iterator insert(size_type i, const T &value) override;
@@ -212,17 +220,23 @@ namespace ctl {
 		inline iterator insert(const_iterator position, std::initializer_list<value_type> il) override;
 		inline iterator insert(size_type i, std::initializer_list<value_type> il) override;
 
+		// FIXME: change to shared_ptr
 		template<typename U>
 		inline sequence<U, iterator> map(std::function<U(reference)> mapper);
 
-		inline void pop_back() override;
+		inline void pop_back() override { _destruct_at_end(_end - 1); }
 		inline void pop_front() override;
 		inline void push_back(const_reference value) override;
+		//		inline void push_back(size_type n, const_reference value) override;
 		inline void push_back(value_type &&value) override;
 		inline void push_front(const_reference value) override;
+		//		inline void push_front(size_type n, const_reference value) override;
+
 		inline void push_front(value_type &&value) override;
-		inline const sequence<value_type, iterator> &prefix(size_type max_length) override;
-		inline const sequence<value_type, iterator> &prefix(conformer predicate) override;
+		// FIXME: change to shared_ptr
+		inline sequence<value_type, iterator> prefix(size_type max_length) override;
+		// FIXME: change to shared_ptr
+		inline sequence<value_type, iterator> prefix(conformer predicate) override;
 
 		inline void reserve(size_type n) override;
 		inline void remove_all(const_reference item) override;
@@ -230,27 +244,27 @@ namespace ctl {
 		inline void remove(const_reference item) override;
 		inline void resize(size_type count) override;
 		inline void resize(size_type count, const value_type &value) override;
+		// FIXME: change to shared_ptr
 		template<typename R>
 		inline sequence<R, iterator> reduce(R initial, std::function<R(reference)> next_result);
-		inline reverse_iterator rbegin() noexcept override;
-		inline const_reverse_iterator rbegin() const noexcept override;
-		inline reverse_iterator rend() noexcept override;
-		inline const_reverse_iterator rend() const noexcept override;
 
+		// FIXME: change to shared_ptr
 		inline collection<value_type, iterator, allocator_type> &subsequence(iterator from, iterator to) override;
+		// FIXME: change to shared_ptr
 		inline collection<value_type, iterator, allocator_type> &subsequence(size_type from, size_type to) override;
-		inline const sequence<value_type, iterator> &suffix(size_type max_length) override;
-		inline const sequence<value_type, iterator> &suffix(conformer predicate) override;
+		// FIXME: change to shared_ptr
+		inline sequence<value_type, iterator> suffix(size_type max_length) override;
+		// FIXME: change to shared_ptr
+		inline sequence<value_type, iterator> suffix(conformer predicate) override;
 		inline void shrink_to_fit() noexcept override;
-		inline unsigned long size() const noexcept override;
+		inline size_type size() const noexcept override { return static_cast<size_type>(_end - _begin); }
 		inline void swap(modifiable<value_type> &other) override;
 	};
-
 	template<class T, class Allocator>
 	void vector<T, Allocator>::_deallocate_data(iterator from, iterator to) {
 
 		iterator _start = from;
-		size_type _sz = this->distance(to, from);
+		size_type _sz = static_cast<size_type>(to - from);
 		for (; from != to; ++from)
 			this->_allocator.destroy(from.data_point);
 		if (capacity() && _begin.data_point != nullptr)
@@ -258,19 +272,10 @@ namespace ctl {
 	}
 
 	template<class T, class Allocator>
-	typename vector<T, Allocator>::iterator vector<T, Allocator>::_copy_data(iterator begin,
-	                                                                         iterator end,
-	                                                                         iterator to) {
-		for (; begin != end; ++begin, ++to)
-			this->_allocator.construct(to.data_point, *begin);
-		return to;
-	}
-
-	template<class T, class Allocator>
 	typename vector<T, Allocator>::size_type vector<T, Allocator>::_recommend(size_type new_size) {
 		size_type _max_size = this->max_size();
 		if (_max_size < new_size)
-			throw std::length_error("vector is too large");
+			throw std::length_error("ctl vector");
 		if (capacity() > _max_size / 2)
 			return _max_size;
 		return std::max(2 * capacity(), new_size);
@@ -278,18 +283,29 @@ namespace ctl {
 	template<class T, class Allocator>
 	void vector<T, Allocator>::_destruct_at_end(iterator new_end) {
 		while (new_end != _end)
-			this->_allocator.destroy(--_end);
+			this->_allocator.destroy(--_end.data_point);
+	}
+	template<class T, class Allocator>
+	void vector<T, Allocator>::_destruct(iterator first, iterator last) {
+		while (first != last)
+			this->_allocator.destroy(++first.data_point);
 	}
 	template<class T, class Allocator>
 	void vector<T, Allocator>::_construct_at_end(size_type n) {
 		while (n-- > 0) {
-			this->_allocator.contruct(_end++);
+			this->_allocator.contruct((_end++).data_point);
 		}
+	}
+	template<class T, class Allocator>
+	template<class Iterator, typename>
+	void vector<T, Allocator>::_construct_at_end(Iterator first, Iterator last, const T &__x) {
+		while (first != last)
+			this->_allocator.construct((first++).data_point, __x);
 	}
 	template<class T, class Allocator>
 	void vector<T, Allocator>::_construct_at_end(size_type n, const_reference __x) {
 		while (n-- > 0) {
-			this->_allocator.contruct(_end++, __x);
+			this->_allocator.contruct((_end++).data_point, __x);
 		}
 	}
 	template<class T, class Allocator>
@@ -301,7 +317,7 @@ namespace ctl {
 	template<class T, class Allocator>
 	void vector<T, Allocator>::_allocate(size_type n) {
 		if (n > this->max_size())
-			throw std::length_error("vector");
+			throw std::length_error("ctl vector");
 		_begin.data_point = _end.data_point = this->_allocator.allocate(n);
 		_storage_end = _begin + n;
 	}
@@ -348,12 +364,14 @@ namespace ctl {
 
 	template<class T, class Allocator>
 	typename vector<T, Allocator>::reference vector<T, Allocator>::at(size_type i) {
-		if (i < capacity() && i > size())
-			_end = _begin + i;
+		if (i >= size())
+			throw std::out_of_range("ctl vector");
 		return *(_begin + i);
 	}
 	template<class T, class Allocator>
 	typename vector<T, Allocator>::const_reference vector<T, Allocator>::at(size_type i) const {
+		if (i >= size())
+			throw std::out_of_range("ctl vector");
 		return *(_begin + i);
 	}
 	template<class T, class Allocator>
@@ -365,5 +383,53 @@ namespace ctl {
 
 		_construct_at_end(other.begin(), other.end());
 	}
+	template<class T, class Allocator>
+	typename vector<T, Allocator>::iterator vector<T, Allocator>::erase(const_iterator position) {
+		if (position < _begin || position > _end)
+			throw std::invalid_argument("ctl vector; position should be in vector");
+		_destruct_at_end(std::move(position + 1, end(), position));
+		return position + 1;
+	}
+
+	template<class T, class Allocator>
+	typename vector<T, Allocator>::iterator vector<T, Allocator>::erase(const_iterator first,
+	                                                                    const_iterator last) {
+		if (first < _begin || first > _end || last < _begin || last > _end)
+			throw std::invalid_argument("ctl vector; slice should be in vector");
+
+		if (first != last)
+			_destruct_at_end(std::move(last, end(), first));
+
+		return last;
+	}
+	template<class T, class Allocator>
+	void vector<T, Allocator>::fill(iterator first, iterator last, const T &value) {
+		_destruct(first, last);
+		_construct_at_end(first, last, value);
+	}
+	template<class T, class Allocator>
+	void vector<T, Allocator>::fill(const T &value, size_type size) {
+		resize(size);
+		fill(begin(), end(), value);
+	}
+	template<class T, class Allocator>
+	void vector<T, Allocator>::filter(vector::conformer predicate) {
+		vector<T, Allocator> other(this->size());
+		for (iterator it = begin(); it != end(); ++it) {
+			if (predicate(*it))
+				other.push_back(*it);
+		}
+		*this = std::move(other);
+	}
+	template<class T, class Allocator>
+	const sequence<T, vector::iterator> &vector<T, Allocator>::filtered(vector::conformer predicate) {
+		vector<T, Allocator> other(this->size());
+		for (iterator it = begin(); it != end(); ++it) {
+			if (predicate(*it))
+				other.push_back(*it);
+		}
+		return other;
+	}
+
 }
 #endif //CONTAINERS_VECTOR_HPP

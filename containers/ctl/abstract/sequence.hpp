@@ -7,6 +7,7 @@
 
 #include "../interface/interfaces.hpp"
 #include "../interface/meta.hpp"
+#include <memory>
 
 namespace ctl {
 	template<class T, class Iterator>
@@ -34,9 +35,12 @@ namespace ctl {
 
 		inline virtual sequence<std::pair<size_type, iterator>, iterator> enumerated() const noexcept = 0;
 
+		virtual inline void fill(size_type first, size_type last, const T &value) = 0; // qt
+		virtual inline void fill(iterator first, iterator last, const T &value) = 0; // qt
+		virtual inline void fill(const T &value, size_type size) = 0; // qt
 		inline void fill(const T &value); // qt
-		virtual const sequence &filter(conformer predicate) = 0;
-		virtual void filtered(conformer predicate) = 0;
+		virtual std::shared_ptr<sequence> filtered(conformer predicate) = 0;
+		virtual void filter(conformer predicate) = 0;
 		inline iterator first(conformer predicate) const noexcept; // qt
 		inline void for_each(action act) noexcept; // c#
 
@@ -48,11 +52,11 @@ namespace ctl {
 		inline iterator max() const;
 		inline iterator max(comparer comp) const;
 
-		virtual const sequence &prefix(size_type max_length) = 0;
-		virtual const sequence &prefix(conformer predicate) = 0;
+		virtual std::shared_ptr<sequence> prefix(size_type max_length) = 0;
+		virtual std::shared_ptr<sequence> prefix(conformer predicate) = 0;
 
-		virtual const sequence &suffix(size_type max_length) = 0;
-		virtual const sequence &suffix(conformer predicate) = 0;
+		virtual std::shared_ptr<sequence> suffix(size_type max_length) = 0;
+		virtual std::shared_ptr<sequence> suffix(conformer predicate) = 0;
 
 		inline bool true_for_all(conformer conform) const; // c#
 

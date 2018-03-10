@@ -36,8 +36,6 @@ namespace ctl {
 		inline virtual ~collection() = default;
 	public:
 		inline allocator_type allocator() const noexcept { return _allocator; } // stl
-		virtual inline void fill(iterator first, iterator last, const T &value) = 0; // qt
-		virtual inline void fill(const T &value, size_type size) = 0; // qt
 
 		inline size_type index_of(const_reference value, size_type first, size_type last) const; // qt
 		inline size_type iterator_of(const_reference value, iterator first, iterator last) const; // qt

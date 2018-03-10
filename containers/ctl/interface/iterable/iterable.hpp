@@ -22,25 +22,19 @@ namespace ctl {
 		inline virtual iterator begin() noexcept = 0; // stl
 		inline virtual const_iterator begin() const noexcept = 0; // stl
 
-		inline virtual const_iterator cbegin() const noexcept = 0; // stl
-		inline virtual const_iterator cend() const noexcept = 0; // stl
-		inline virtual const_reverse_iterator crbegin() const noexcept = 0; // stl
-		inline virtual const_reverse_iterator crend() const noexcept = 0; // stl
-
-		inline size_type distance(const_iterator first, const_iterator last); // swift
+		inline const_iterator cbegin() const noexcept { return begin(); }; // stl
+		inline const_iterator cend() const noexcept { return end(); }; // stl
+		inline const_reverse_iterator crbegin() const noexcept { return rbegin(); }; // stl
+		inline const_reverse_iterator crend() const noexcept { return rend(); } // stl
 
 		inline virtual iterator end() noexcept = 0; // stl
 		inline virtual const_iterator end() const noexcept = 0; // stl
 
-		inline virtual reverse_iterator rbegin() noexcept = 0; // stl
-		inline virtual const_reverse_iterator rbegin() const noexcept = 0; // stl
-		inline virtual reverse_iterator rend() noexcept = 0; // stl
-		inline virtual const_reverse_iterator rend() const noexcept = 0; // stl
+		inline reverse_iterator rbegin() noexcept { return reverse_iterator(end()); }; // stl
+		inline const_reverse_iterator rbegin() const noexcept { return const_reverse_iterator(end()); }; // stl
+		inline reverse_iterator rend() noexcept { return reverse_iterator(begin()); }; // stl
+		inline const_reverse_iterator rend() const noexcept { return const_reverse_iterator(begin()); }; // stl
 	};
-	template<class Iterator>
-	typename iterable<Iterator>::size_type iterable<Iterator>::distance(const_iterator first, const_iterator last) {
-		return static_cast<size_type>(last - first);
-	}
 }
 
 #endif //COLLECTIONS_ENUMERABLE_HPP
