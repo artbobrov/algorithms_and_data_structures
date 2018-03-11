@@ -28,7 +28,7 @@ namespace ctl {
 		typedef size_t size_type;
 		typedef std::ptrdiff_t difference_type;
 
-		typedef std::function<bool(const_reference)> conformer;
+		typedef bool (*conformer)(const_reference);
 	public:
 		inline virtual void append(element_accessible_modifiable<value_type, iterator> &value) = 0;
 		inline void append(const_reference value) { push_back(value); } // qt

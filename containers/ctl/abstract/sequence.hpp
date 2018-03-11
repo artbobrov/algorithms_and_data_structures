@@ -23,10 +23,9 @@ namespace ctl {
 		typedef size_t size_type;
 		typedef std::ptrdiff_t difference_type;
 
-		typedef std::function<bool(const_reference)> conformer;
-		typedef std::function<void(reference)> action;
-		typedef std::function<bool(const_reference, const_reference)> comparer;
-
+		typedef bool (*conformer)(const_reference);
+		typedef void (*action)(reference);
+		typedef bool (*comparer)(const_reference, const_reference);
 	public:
 		inline bool contains(const_reference item) const; // qt
 		inline bool contains(conformer predicate) const; // qt

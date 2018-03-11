@@ -138,7 +138,7 @@ namespace ctl {
 	template<class T, class Allocator = std::allocator<T>>
 	class vector : public object,
 	               public collection<T, __vector_iterator<T>, Allocator>,
-	               public reservable, /* TODO: add or remove comparable<...> ... */
+	               public reservable,
 	               public resizable<T>,
 	               public element_accessible_modifiable<T, __vector_iterator<T>> {
 	public:
@@ -154,9 +154,9 @@ namespace ctl {
 		typedef size_t size_type;
 		typedef std::ptrdiff_t difference_type;
 
-		typedef std::function<bool(const_reference)> conformer;
-		typedef std::function<void(reference)> action;
-		typedef std::function<bool(const_reference, const_reference)> comparer;
+		typedef bool (*conformer)(const_reference);
+		typedef void (*action)(reference);
+		typedef bool (*comparer)(const_reference, const_reference);
 	private:
 		iterator _begin, _end, _storage_end;
 	private:
@@ -213,7 +213,7 @@ namespace ctl {
 		explicit operator std::string() const noexcept override;
 	public:
 		template<typename R>
-		inline R accumulate(R initial, std::function<R(R, const_reference)> next_result);
+		inline R accumulate(R initial, R (*next_result)(R, const_reference));
 		inline void append(element_accessible_modifiable<value_type, iterator> &other) override;
 		inline reference at(size_type i) override;
 		inline const_reference at(size_type i) const override;
@@ -793,7 +793,7 @@ namespace ctl {
 	}
 	template<class T, class Allocator>
 	template<typename R>
-	R vector<T, Allocator>::accumulate(R initial, std::function<R(R, const_reference)> next_result) {
+	R vector<T, Allocator>::accumulate(R initial, R (*next_result)(R, const_reference)) {
 		for (iterator it = begin(); it != end(); ++it)
 			initial = next_result(initial, *it);
 

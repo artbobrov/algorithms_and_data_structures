@@ -33,7 +33,6 @@ public:
 	ctl::vector<int> *ctlvec;
 };
 
-
 TEST_F(vector_test_fixture, testst) {
 	ASSERT_EQ(*ctlvec, *stdvec);
 }

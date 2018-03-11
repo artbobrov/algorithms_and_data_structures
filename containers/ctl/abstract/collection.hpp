@@ -27,10 +27,10 @@ namespace ctl {
 		typedef size_t size_type;
 		typedef std::ptrdiff_t difference_type;
 
-		typedef std::function<bool(const_reference)> conformer;
-		typedef std::function<void(const_reference)> action;
-		typedef std::function<reference(reference)> map_action;
-		typedef std::function<bool(const_reference, const_reference)> comparer;
+		typedef bool (*conformer)(const_reference);
+		typedef void (*action)(reference);
+		typedef bool (*comparer)(const_reference, const_reference);
+		typedef reference (*map_action)(reference);
 	public:
 		explicit collection(const Allocator &alloc = Allocator()) : _allocator(alloc) {}
 		inline virtual ~collection() = default;

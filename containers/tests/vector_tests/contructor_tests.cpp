@@ -125,4 +125,16 @@ TEST(vector_contructor_test_suite, move_constructors) {
 	ASSERT_EQ(moved_ctl_vector.capacity(), saved_vector.capacity());
 }
 
+TEST(vector_contructor_test_suite, il_constructors) {
+	ctl::vector<int> ctl_vector{1, 2, 3, 4, 5, 6, 7};
+	std::vector<int> std_vector{1, 2, 3, 4, 5, 6, 7};
+
+	ASSERT_EQ(ctl_vector, std_vector);
+
+	ctl_vector.push_back(-1);
+	ASSERT_NE(ctl_vector, std_vector);
+
+	std_vector.push_back(-1);
+	ASSERT_EQ(ctl_vector, std_vector);
+}
 
