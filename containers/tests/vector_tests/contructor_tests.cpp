@@ -8,12 +8,12 @@
 
 #include <thread>
 
-
 size_t get_size(size_t max_size = 1000) {
 	std::mt19937 gen(static_cast<unsigned int>(time(0)));
 	std::uniform_int_distribution<> uid(0, 1000);
 	return static_cast<size_t>(uid(gen));
 }
+
 int get_value() {
 	std::mt19937 gen(static_cast<unsigned int>(time(0)));
 	std::uniform_int_distribution<> uid(-100, 100);

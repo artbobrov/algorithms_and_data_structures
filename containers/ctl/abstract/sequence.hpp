@@ -26,6 +26,7 @@ namespace ctl {
 		typedef std::function<bool(const_reference)> conformer;
 		typedef std::function<void(reference)> action;
 		typedef std::function<bool(const_reference, const_reference)> comparer;
+
 	public:
 		inline bool contains(const_reference item) const; // qt
 		inline bool contains(conformer predicate) const; // qt
@@ -33,15 +34,13 @@ namespace ctl {
 		inline size_type count(const_reference item) const noexcept; // qt
 		inline size_type count(conformer predicate) const noexcept; // qt
 
-		inline virtual sequence<std::pair<size_type, iterator>, iterator> enumerated() const noexcept = 0;
-
 		virtual inline void fill(size_type first, size_type last, const T &value) = 0; // qt
 		virtual inline void fill(iterator first, iterator last, const T &value) = 0; // qt
 		virtual inline void fill(const T &value, size_type size) = 0; // qt
 		inline void fill(const T &value); // qt
-		virtual std::shared_ptr<sequence> filtered(conformer predicate) = 0;
 		virtual void filter(conformer predicate) = 0;
 		inline iterator first(conformer predicate) const noexcept; // qt
+		inline iterator first(const_reference item) const noexcept; // qt
 		inline void for_each(action act) noexcept; // c#
 
 		template<typename = typename std::enable_if<is_comparable<T, T>::value>::type>
@@ -52,14 +51,7 @@ namespace ctl {
 		inline iterator max() const;
 		inline iterator max(comparer comp) const;
 
-		virtual std::shared_ptr<sequence> prefix(size_type max_length) = 0;
-		virtual std::shared_ptr<sequence> prefix(conformer predicate) = 0;
-
-		virtual std::shared_ptr<sequence> suffix(size_type max_length) = 0;
-		virtual std::shared_ptr<sequence> suffix(conformer predicate) = 0;
-
 		inline bool true_for_all(conformer conform) const; // c#
-
 		inline virtual std::vector<value_type> to_std_vector() const; // qt
 		inline virtual std::list<value_type> to_std_list() const; // c#
 		inline virtual std::set<value_type> to_std_set() const; // c#
@@ -107,6 +99,12 @@ namespace ctl {
 	typename sequence<T, Iterator>::iterator sequence<T, Iterator>::first(conformer predicate) const noexcept {
 		iterator _first = this->begin();
 		for (; _first != this->end() && !predicate(*_first); ++_first) {}
+		return _first;
+	}
+	template<class T, class Iterator>
+	typename sequence<T, Iterator>::iterator sequence<T, Iterator>::first(const_reference item) const noexcept {
+		iterator _first = this->begin();
+		for (; _first != this->end() && *_first != item; ++_first) {}
 		return _first;
 	}
 

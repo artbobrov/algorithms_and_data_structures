@@ -9,6 +9,20 @@
 #include "../base/object.hpp"
 
 namespace ctl {
+	template<class Iterator>
+	inline std::ptrdiff_t _distance(Iterator first, Iterator last, std::input_iterator_tag) {
+		std::ptrdiff_t dist = 0;
+		for (; first != last; ++first, ++dist) {}
+		return dist;
+	}
+	template<class Iterator>
+	inline std::ptrdiff_t _distance(Iterator first, Iterator last, std::random_access_iterator_tag) {
+		return last - first;
+	}
+	template<class Iterator>
+	inline std::ptrdiff_t distance(Iterator first, Iterator last) {
+		return _distance(first, last, typename std::iterator_traits<Iterator>::iterator_category());
+	}
 
 	template<class Iterator>
 	class iterable {

@@ -57,6 +57,11 @@ namespace ctl {
 	                                                                         std::forward_iterator_tag> {
 	};
 
+	template<class Iterator>
+	struct is_output_iterator : public has_iterator_category_convertible_to<Iterator,
+	                                                                        std::output_iterator_tag> {
+	};
+
 }
 
 #endif //CONTAINERS_ITERATOR_META_HPP

@@ -27,6 +27,8 @@ namespace ctl {
 		typedef value_type const &const_reference;
 		typedef size_t size_type;
 		typedef std::ptrdiff_t difference_type;
+
+		typedef std::function<bool(const_reference)> conformer;
 	public:
 		inline virtual void append(element_accessible_modifiable<value_type, iterator> &value) = 0;
 		inline void append(const_reference value) { push_back(value); } // qt
@@ -38,23 +40,28 @@ namespace ctl {
 		inline virtual iterator erase(size_type first, size_type last) = 0;
 
 		inline virtual iterator insert(const_iterator before, const T &value) = 0; // stl
-		inline virtual iterator insert(size_type i, const T &value) = 0; // qt
+		inline virtual iterator insert(size_type idx, const T &value) = 0; // qt
 		inline virtual iterator insert(const_iterator before, value_type &&value) = 0; // stl
-		inline virtual iterator insert(size_type i, value_type &&value) = 0; // stl
+		inline virtual iterator insert(size_type idx, value_type &&value) = 0; // stl
 		inline virtual iterator insert(const_iterator before, size_type count, const T &value) = 0; // stl
-		inline virtual iterator insert(size_type i, size_type count, const T &value) = 0; // qt
+		inline virtual iterator insert(size_type ixd, size_type count, const T &value) = 0; // qt
 		inline virtual iterator insert(const_iterator position, std::initializer_list<value_type> il) = 0; // stl
-		inline virtual iterator insert(size_type i, std::initializer_list<value_type> il) = 0; // stl
+		inline virtual iterator insert(size_type idx, std::initializer_list<value_type> il) = 0; // stl
 
 		inline virtual void pop_back() = 0; // stl
+		inline virtual void pop_back(size_type count) = 0; // stl
 		inline virtual void pop_front() = 0; // qt
+		inline virtual void pop_front(size_type count) = 0; // qt
 		inline virtual void push_back(const_reference value) = 0; // stl
+		inline virtual void push_back(size_type count, const_reference value) = 0;
 		inline virtual void push_back(value_type &&value) = 0; // stl
 		inline virtual void push_front(const_reference value) = 0; // qt
 		inline virtual void push_front(value_type &&value) = 0; // qt
+		inline virtual void push_front(size_type count, const_reference value) = 0; // qt
 
 		inline virtual void remove_all(const_reference item) = 0; // qt
-		inline virtual void remove_at(int i) = 0; // qt
+		inline virtual void remove_all(conformer predicate) = 0; // qt
+		inline virtual void remove_at(int idx) = 0; // qt
 		inline virtual void remove(const_reference item) = 0; // qt
 		inline void remove_last() { pop_back(); } // qt
 		inline void remove_first() { pop_front(); } // qt

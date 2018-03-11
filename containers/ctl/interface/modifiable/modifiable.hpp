@@ -14,8 +14,6 @@ namespace ctl {
 	class modifiable {
 	public:
 		inline virtual void clear() noexcept = 0; // stl
-
-		inline virtual void swap(modifiable &other) = 0; // stl
 	};
 }
 

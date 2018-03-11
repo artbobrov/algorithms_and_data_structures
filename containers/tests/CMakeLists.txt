@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 add_subdirectory(lib/googletest)
 
-include_directories(lib/googletest/googletest/include lib/ctl)
+include_directories(lib/googletest/googletest/include lib/ctl/data_structures)
 set(SOURCE_FILES vector_tests/contructor_tests.cpp extra extra/extra_std_functions.hpp vector_tests/methods_test.cpp)
 
 

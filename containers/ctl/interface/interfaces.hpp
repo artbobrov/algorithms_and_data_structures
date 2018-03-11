@@ -8,8 +8,6 @@
 #include "base/object.hpp"
 #include "capacity/reservable.hpp"
 #include "capacity/size_accessible.hpp"
-#include "comparable/comparable.hpp"
-#include "comparable/equatable.hpp"
 #include "element_accessible/bidirectional_element_accessible.hpp"
 #include "element_accessible/data_accessible.hpp"
 #include "element_accessible/random_element_accessible.hpp"

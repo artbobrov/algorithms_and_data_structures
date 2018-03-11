@@ -43,11 +43,6 @@ namespace ctl {
 		inline void reverse(); // c#
 		inline void reverse(iterator first, iterator last); // c#
 		inline void reverse(size_type first, size_type last); // c#
-
-		inline virtual collection<value_type, iterator, allocator_type> &subsequence(iterator from,
-		                                                                             iterator to) = 0; // swift
-		inline virtual collection<value_type, iterator, allocator_type> &subsequence(size_type from,
-		                                                                             size_type to) = 0; // swift
 	protected:
 		allocator_type _allocator;
 	};
