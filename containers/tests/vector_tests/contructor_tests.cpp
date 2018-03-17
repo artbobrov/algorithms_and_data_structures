@@ -1,6 +1,5 @@
 #include "gtest/gtest.h"
 #include "vector.hpp"
-#include "../extra/extra_std_functions.hpp"
 
 #include <ctime>
 #include <vector>
@@ -8,25 +7,27 @@
 
 #include <thread>
 
+#include "extra_functions.hpp"
 
+std::default_random_engine gen(static_cast<unsigned int>(time(0)));
 size_t get_size(size_t max_size = 1000) {
-	std::mt19937 gen(static_cast<unsigned int>(time(0)));
 	std::uniform_int_distribution<> uid(0, 1000);
 	return static_cast<size_t>(uid(gen));
 }
+
 int get_value() {
 	std::mt19937 gen(static_cast<unsigned int>(time(0)));
 	std::uniform_int_distribution<> uid(-100, 100);
 	return static_cast<int>(uid(gen));
 }
 
-TEST(vector_contructor_test_suite, default_constructor) {
+TEST(vector_contructor_test_suite, default) {
 	std::vector<int> svec;
 	ctl::vector<int> cvec;
 	ASSERT_EQ(cvec, svec);
 }
 
-TEST(vector_contructor_test_suite, default_value_constructor) {
+TEST(vector_contructor_test_suite, default_value) {
 	size_t size = get_size();
 	int value = get_value();
 	std::vector<int> svec(size, value);
@@ -34,7 +35,7 @@ TEST(vector_contructor_test_suite, default_value_constructor) {
 	ASSERT_EQ(cvec, svec);
 }
 
-TEST(vector_contructor_test_suite, template_constructors) {
+TEST(vector_contructor_test_suite, template) {
 	size_t size = get_size();
 
 	std::vector<int> std_tmp_vector(size);
@@ -54,7 +55,7 @@ TEST(vector_contructor_test_suite, template_constructors) {
 	ASSERT_EQ(cvec_l, std_tmp_list);
 	ASSERT_EQ(cvec_l, std_tmp_vector);
 }
-TEST(vector_contructor_test_suite, copy_constructor) {
+TEST(vector_contructor_test_suite, copy) {
 	size_t size = get_size();
 
 	ctl::vector<int> cvector(size);
@@ -67,7 +68,7 @@ TEST(vector_contructor_test_suite, copy_constructor) {
 
 	ASSERT_EQ(cvector, copy_ctl_vector);
 }
-TEST(vector_contructor_test_suite, copy_constructors_from_stl) {
+TEST(vector_contructor_test_suite, copy_from_stl) {
 	size_t size = get_size();
 
 	std::vector<int> svector;
@@ -105,7 +106,7 @@ TEST(vector_contructor_test_suite, copy_constructors_from_stl) {
 		ASSERT_EQ(cit->second, sit->second);
 }
 
-TEST(vector_contructor_test_suite, move_constructors) {
+TEST(vector_contructor_test_suite, move) {
 	size_t size = get_size();
 
 	ctl::vector<int> ctl_vector(size);
@@ -125,4 +126,16 @@ TEST(vector_contructor_test_suite, move_constructors) {
 	ASSERT_EQ(moved_ctl_vector.capacity(), saved_vector.capacity());
 }
 
+TEST(vector_contructor_test_suite, initializer_list) {
+	ctl::vector<int> ctl_vector{1, 2, 3, 4, 5, 6, 7};
+	std::vector<int> std_vector{1, 2, 3, 4, 5, 6, 7};
+
+	ASSERT_EQ(ctl_vector, std_vector);
+
+	ctl_vector.push_back(-1);
+	ASSERT_NE(ctl_vector, std_vector);
+
+	std_vector.push_back(-1);
+	ASSERT_EQ(ctl_vector, std_vector);
+}
 

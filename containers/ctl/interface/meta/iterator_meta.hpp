@@ -52,6 +52,15 @@ namespace ctl {
 	struct is_random_access_iterator : public has_iterator_category_convertible_to<Iterator,
 	                                                                               std::random_access_iterator_tag> {
 	};
+	template<class Iterator>
+	struct is_forward_iterator : public has_iterator_category_convertible_to<Iterator,
+	                                                                         std::forward_iterator_tag> {
+	};
+
+	template<class Iterator>
+	struct is_output_iterator : public has_iterator_category_convertible_to<Iterator,
+	                                                                        std::output_iterator_tag> {
+	};
 
 }
 
