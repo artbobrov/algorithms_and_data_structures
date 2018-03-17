@@ -96,8 +96,10 @@ namespace ctl {
 	 * Non member functions
 	 */
 
+	// FIXME: mb bug with the comparison of other ctl containers(ctl::list, ctl::set etc)
+	// the brute force solution: implement operator== for each pair of ctl containers
 	template<class T, class Iterator, class Allocator, class Container, typename =
-	typename std::enable_if<!std::is_convertible<collection<T, Iterator, Allocator> *, Container *>::value &&
+	typename std::enable_if</*!std::is_convertible<collection<T, Iterator, Allocator> *, Container *>::value &&*/
 		has_begin_end<Container>::value>::type>
 	inline bool operator==(const collection<T, Iterator, Allocator> &__collection, const Container &__container) {
 		auto _collection_iter = __collection.begin();
@@ -112,23 +114,22 @@ namespace ctl {
 	}
 
 	template<class T, class Iterator, class Allocator, class Container, typename =
-	typename std::enable_if<!std::is_convertible<collection<T, Iterator, Allocator> *, Container *>::value
-		                        && !std::is_same<collection<T, Iterator, Allocator>, Container>::value
-		                        && has_begin_end<Container>::value>::type>
+	typename std::enable_if</*!std::is_convertible<collection<T, Iterator, Allocator> *, Container *>::value &&*/
+		has_begin_end<Container>::value>::type>
 	inline bool operator==(const Container &__container, const collection<T, Iterator, Allocator> &__collection) {
 		return __collection == __container;
 	}
 
 	template<class T, class Iterator, class Allocator, class Container, typename =
-	typename std::enable_if<!std::is_convertible<collection<T, Iterator, Allocator> *, Container *>::value
-		                        && has_begin_end<Container>::value>::type>
+	typename std::enable_if</*!std::is_convertible<collection<T, Iterator, Allocator> *, Container *>::value &&*/
+		has_begin_end<Container>::value>::type>
 	inline bool operator!=(const collection<T, Iterator, Allocator> &__collection, const Container &__container) {
 		return !(__collection == __container);
 	}
 
 	template<class T, class Iterator, class Allocator, class Container, typename =
-	typename std::enable_if<!std::is_convertible<collection<T, Iterator, Allocator> *, Container *>::value
-		                        && has_begin_end<Container>::value>::type>
+	typename std::enable_if</*!std::is_convertible<collection<T, Iterator, Allocator> *, Container *>::value &&*/
+		has_begin_end<Container>::value>::type>
 	inline bool operator!=(const Container &__container, const collection<T, Iterator, Allocator> &__collection) {
 		return !(__collection == __container);
 	}
