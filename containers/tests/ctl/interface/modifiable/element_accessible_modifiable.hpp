@@ -9,12 +9,12 @@
 #include <memory>
 
 #include "../interfaces.hpp"
+#include "bidirectional_element_accessible_modifiable.hpp"
 
 namespace ctl {
 	template<class T, class Iterator>
-	class element_accessible_modifiable : public random_element_accessible<T>,
-	                                      public modifiable<T>,
-	                                      public size_accessible,
+	class element_accessible_modifiable : public bidirectional_element_accessible_modifiable<T, Iterator>,
+	                                      public random_element_accessible<T>,
 	                                      public virtual iterable<Iterator> {
 	public:
 		typedef T value_type;
@@ -30,52 +30,21 @@ namespace ctl {
 
 		typedef std::function<bool(const_reference)> conformer;
 	public:
-		inline virtual void append(element_accessible_modifiable<value_type, iterator> &value) = 0;
-		inline void append(const_reference value) { push_back(value); } // qt
-		inline void append(value_type &&value) { push_back(std::move(value)); } // qt
-
-		inline virtual iterator erase(const_iterator position) = 0;
 		inline virtual iterator erase(size_type position) = 0;
-		inline virtual iterator erase(const_iterator first, const_iterator last) = 0;
 		inline virtual iterator erase(size_type first, size_type last) = 0;
 
-		inline virtual iterator insert(const_iterator before, const T &value) = 0; // stl
 		inline virtual iterator insert(size_type idx, const T &value) = 0; // qt
-		inline virtual iterator insert(const_iterator before, value_type &&value) = 0; // stl
 		inline virtual iterator insert(size_type idx, value_type &&value) = 0; // stl
-		inline virtual iterator insert(const_iterator before, size_type count, const T &value) = 0; // stl
-		inline virtual iterator insert(size_type ixd, size_type count, const T &value) = 0; // qt
-		inline virtual iterator insert(const_iterator position, std::initializer_list<value_type> il) = 0; // stl
+		inline virtual iterator insert(size_type idx, size_type count, const T &value) = 0; // qt
 		inline virtual iterator insert(size_type idx, std::initializer_list<value_type> il) = 0; // stl
 
-		inline virtual void pop_back() = 0; // stl
-		inline virtual void pop_back(size_type count) = 0; // stl
-		inline virtual void pop_front() = 0; // qt
-		inline virtual void pop_front(size_type count) = 0; // qt
-		inline virtual void push_back(const_reference value) = 0; // stl
-		inline virtual void push_back(size_type count, const_reference value) = 0;
-		inline virtual void push_back(value_type &&value) = 0; // stl
-		inline virtual void push_front(const_reference value) = 0; // qt
-		inline virtual void push_front(value_type &&value) = 0; // qt
-		inline virtual void push_front(size_type count, const_reference value) = 0; // qt
-
-		inline virtual void remove_all(const_reference item) { remove_all(this->begin(), this->end(), item); } // qt
-		inline virtual void remove_all(iterator first, iterator last, const_reference item) = 0; // qt
+		using bidirectional_element_accessible_modifiable<value_type, iterator>::remove_all;
 		inline virtual void remove_all(size_type first, size_type last, const_reference item) {
 			remove_all(this->begin() + first, this->begin() + last, item);
 		} // qt
-		inline virtual void remove_all(conformer predicate) { remove_all(this->begin(), this->end(), predicate); } // qt
-		inline virtual void remove_all(iterator first, iterator last, conformer predicate) = 0; // qt
 		inline virtual void remove_all(size_type first, size_type last, conformer predicate) {
 			remove_all(this->begin() + first, this->begin() + last, predicate);
 		} // qt
-		inline virtual void remove_at(int idx) = 0; // qt
-		inline virtual void remove(const_reference item) = 0; // qt
-		inline void remove_last() { pop_back(); } // qt
-		inline void remove_first() { pop_front(); } // qt
-
-		inline virtual void resize(size_type count) = 0;
-		inline virtual void resize(size_type count, const value_type &value) = 0;
 	};
 }
 

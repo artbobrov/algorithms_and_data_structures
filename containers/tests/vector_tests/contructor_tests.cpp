@@ -35,7 +35,7 @@ TEST(vector_contructor_test_suite, default_value) {
 	ASSERT_EQ(cvec, svec);
 }
 
-TEST(vector_contructor_test_suite, template_) {
+TEST(vector_contructor_test_suite, template) {
 	size_t size = get_size();
 
 	std::vector<int> std_tmp_vector(size);

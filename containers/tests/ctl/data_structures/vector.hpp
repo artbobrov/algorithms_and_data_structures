@@ -140,6 +140,7 @@ namespace ctl {
 	               public collection<T, __vector_iterator<T>, Allocator>,
 	               public reservable,
 	               public resizable<T>,
+	               public data_accessible<T>,
 	               public element_accessible_modifiable<T, __vector_iterator<T>> {
 	public:
 		typedef Allocator allocator_type;
@@ -219,7 +220,7 @@ namespace ctl {
 	public:
 		template<typename R>
 		inline R accumulate(R initial, R (*next_result)(R, const_reference));
-		inline void append(element_accessible_modifiable<value_type, iterator> &other) override;
+		inline void append(bidirectional_element_accessible_modifiable<value_type, iterator> &other) override;
 		inline reference at(size_type i) override;
 		inline const_reference at(size_type i) const override;
 
@@ -230,6 +231,9 @@ namespace ctl {
 
 		inline size_type capacity() const noexcept override { return static_cast<size_type>(_storage_end - _begin); }
 		inline void clear() noexcept override { _destruct_at_end(_begin); }
+
+		inline pointer data() noexcept override { return _begin.data_point; }
+		inline pointer const data() const noexcept override { return _begin.data_point; }
 
 		inline iterator erase(const_iterator position) override;
 		inline iterator erase(size_type position) override { return erase(begin() + position); }
@@ -516,7 +520,7 @@ namespace ctl {
 		return *(_begin + i);
 	}
 	template<class T, class Allocator>
-	void vector<T, Allocator>::append(element_accessible_modifiable<value_type, iterator> &other) {
+	void vector<T, Allocator>::append(bidirectional_element_accessible_modifiable<value_type, iterator> &other) {
 		if (size() + other.size() > capacity()) {
 			size_type __capacity = _recommend(size() + other.size());
 			vector tmp = vector(__capacity, this->allocator());

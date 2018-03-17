@@ -10,7 +10,6 @@
 #include <memory>
 
 namespace ctl {
-	template<class T>
 	class modifiable {
 	public:
 		inline virtual void clear() noexcept = 0; // stl

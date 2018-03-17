@@ -66,7 +66,7 @@ protected:
 		generator = std::default_random_engine(time(0));
 		stdvec = new std::vector<int>();
 		ctlvec = new ctl::vector<int>();
-		size_t size = get_size(1000);
+		size_t size = get_size(1000000);
 		this->fill(size);
 	}
 private:
@@ -146,7 +146,7 @@ TEST_F(vector_test_fixture, fill) {
 	ctlvec->fill(value);
 	ASSERT_EQ(ctlvec->count(value), ctlvec->size());
 	value = get_value();
-	auto idx = /*get_size(ctlvec->size())*/ 2;
+	auto idx = get_size(ctlvec->size());
 	auto diff = ctlvec->size() - idx;
 	ctlvec->fill(idx, idx + diff, value);
 	ASSERT_EQ(ctlvec->subsequence(idx, idx + diff).count(value), diff);
@@ -239,7 +239,7 @@ TEST_F(vector_test_fixture, pop_front) {
 	ctlvec->pop_front();
 	stdvec->erase(stdvec->begin());
 	ASSERT_EQ(*ctlvec, *stdvec);
-	auto size = this->get_size(ctlvec->size());
+	auto size = this->get_size(std::min(this->get_size(1000), ctlvec->size()));
 	ctlvec->pop_front(size);
 	for (int i = 0; i < size; i++) { stdvec->erase(stdvec->begin()); }
 	ASSERT_EQ(*ctlvec, *stdvec);
@@ -254,7 +254,7 @@ TEST_F(vector_test_fixture, push_back) {
 }
 
 TEST_F(vector_test_fixture, push_front) {
-	auto size = this->get_size(ctlvec->size() / 2);
+	auto size = this->get_size(std::min(this->get_size(1000), ctlvec->size()));
 	auto value = -this->get_value();
 	ctlvec->push_front(size, value);
 	for (int i = 0; i < size; i++) { stdvec->insert(stdvec->begin(), value); }
