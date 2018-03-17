@@ -76,10 +76,18 @@ namespace ctl {
 		const_reverse_iterator crbegin() const noexcept;
 		const_reverse_iterator crend() const noexcept;
 
+        pointer data() noexcept;
+        pointer data() const noexcept;
+
+		template<class... Args>
+		reference emplace(const_iterator position, Args &&... args);
+		template<class... Args>
+		reference emplace(size_type idx, Args &&... args);
+		template<class... Args>
+		reference emplace_back(Args &&... args);
 		bool empty() const noexcept;
 		iterator end() noexcept;
 		const_iterator end() const noexcept;
-		vector<std::pair<size_type, iterator>, allocator_type> enumerated() noexcept;
 		iterator erase(const_iterator position);
 		iterator erase(size_type position);
 		iterator erase(const_iterator first, const_iterator last);
@@ -90,6 +98,7 @@ namespace ctl {
 		void fill(const T &value, size_type size);
 		void fill(const T &value);
 		void filter(conformer predicate);
+		vector filtered(conformer predicate);
 		vector<value_type, allocator_type> filtered(conformer predicate);
 		iterator first(conformer predicate) const noexcept;
 		iterator first(const_reference item) const;
@@ -98,12 +107,13 @@ namespace ctl {
 		const_reference front() const;
 
 		size_type index_of(const_reference value, size_type first, size_type last) const;
-		iterator insert(const_iterator position, const T &value);
-		iterator insert(size_type idx, const T &value);
+		size_typeindex_of(const_reference value) const;
+		iterator insert(const_iterator position, const_reference value);
+		iterator insert(size_type idx, const_reference value);
 		iterator insert(const_iterator position, value_type &&value);
 		iterator insert(size_type idx, value_type &&value);
-		iterator insert(const_iterator position, size_type count, const T &value);
-		iterator insert(size_type idx, size_type count, const T &value);
+		iterator insert(const_iterator position, size_type count, const_reference value);
+		iterator insert(size_type idx, size_type count, const_reference value);
 		iterator insert(const_iterator position, std::initializer_list<value_type> il);
 		iterator insert(size_type idx, std::initializer_list<value_type> il);
 		template<class Iterator>
@@ -137,7 +147,11 @@ namespace ctl {
 		const_reverse_iterator rbegin() const noexcept;
 		void remove(const_reference item);
 		void remove_all(const_reference item);
+		void remove_all(iterator first, iterator last, const_reference item);
+		void remove_all(size_type first, size_type last, const_reference item);
 		void remove_all(conformer predicate);
+		void remove_all(iterator first, iterator last, conformer predicate);
+		void remove_all(size_type first, size_type last, conformer predicate);
 		void remove_at(int idx);
 		void remove_first();
 		void remove_last();
@@ -171,5 +185,17 @@ namespace ctl {
 
 	template<class T, class Allocator, class Container>
 	bool operator!=(const vector<T, Allocator> &lhs, const Container &rhs);
+
+	template<class T, class Allocator>
+	bool operator<(const vector<T, Allocator> &lhs, const vector<T, Allocator> &rhs);
+
+	template<class T, class Allocator>
+	bool operator>(const vector<T, Allocator> &lhs, const vector<T, Allocator> &rhs);
+
+	template<class T, class Allocator>
+	bool operator<=(const vector<T, Allocator> &lhs, const vector<T, Allocator> &rhs);
+
+	template<class T, class Allocator>
+	bool operator>=(const vector<T, Allocator> &lhs, const vector<T, Allocator> &rhs);
 }
 */

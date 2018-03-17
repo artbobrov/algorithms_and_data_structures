@@ -46,6 +46,7 @@ namespace ctl {
 		inline void reverse(); // c#
 		inline void reverse(iterator first, iterator last); // c#
 		inline void reverse(size_type first, size_type last); // c#
+
 	protected:
 		allocator_type _allocator;
 	};
@@ -93,46 +94,106 @@ namespace ctl {
 	}
 
 	/*
-	 * Non member functions
+	 * Non member functions: BEGIN
 	 */
 
 	// FIXME: mb bug with the comparison of other ctl containers(ctl::list, ctl::set etc)
 	// the brute force solution: implement operator== for each pair of ctl containers
 	template<class T, class Iterator, class Allocator, class Container, typename =
-	typename std::enable_if</*!std::is_convertible<collection<T, Iterator, Allocator> *, Container *>::value &&*/
-		has_begin_end<Container>::value>::type>
-	inline bool operator==(const collection<T, Iterator, Allocator> &__collection, const Container &__container) {
-		auto _collection_iter = __collection.begin();
-		auto _container_iter = __container.begin();
+	typename std::enable_if<has_begin_end<Container>::value>::type>
+	inline bool operator==(const collection<T, Iterator, Allocator> &lhs, const Container &rhs) {
+		auto _collection_iter = lhs.begin();
+		auto _container_iter = rhs.begin();
 
-		for (; _collection_iter != __collection.end() && _container_iter != __container.end();
+		for (; _collection_iter != lhs.end() && _container_iter != rhs.end();
 		       ++_collection_iter, ++_container_iter) {
 			if (*_collection_iter != *_container_iter)
 				return false;
 		}
-		return _collection_iter == __collection.end() && _container_iter == __container.end();
+		return _collection_iter == lhs.end() && _container_iter == rhs.end();
 	}
 
 	template<class T, class Iterator, class Allocator, class Container, typename =
-	typename std::enable_if</*!std::is_convertible<collection<T, Iterator, Allocator> *, Container *>::value &&*/
-		has_begin_end<Container>::value>::type>
-	inline bool operator==(const Container &__container, const collection<T, Iterator, Allocator> &__collection) {
-		return __collection == __container;
+	typename std::enable_if<has_begin_end<Container>::value>::type>
+	inline bool operator==(const Container &lhs, const collection<T, Iterator, Allocator> &rhs) {
+		return rhs == lhs;
 	}
 
 	template<class T, class Iterator, class Allocator, class Container, typename =
-	typename std::enable_if</*!std::is_convertible<collection<T, Iterator, Allocator> *, Container *>::value &&*/
-		has_begin_end<Container>::value>::type>
-	inline bool operator!=(const collection<T, Iterator, Allocator> &__collection, const Container &__container) {
-		return !(__collection == __container);
+	typename std::enable_if<has_begin_end<Container>::value>::type>
+	inline bool operator!=(const collection<T, Iterator, Allocator> &lhs, const Container &rhs) {
+		return !(lhs == rhs);
 	}
 
 	template<class T, class Iterator, class Allocator, class Container, typename =
-	typename std::enable_if</*!std::is_convertible<collection<T, Iterator, Allocator> *, Container *>::value &&*/
-		has_begin_end<Container>::value>::type>
-	inline bool operator!=(const Container &__container, const collection<T, Iterator, Allocator> &__collection) {
-		return !(__collection == __container);
+	typename std::enable_if<has_begin_end<Container>::value>::type>
+	inline bool operator!=(const Container &lhs, const collection<T, Iterator, Allocator> &rhs) {
+		return !(rhs == lhs);
 	}
+
+	template<class T, class Iterator, class Allocator, class Container, typename =
+	typename std::enable_if<has_begin_end<Container>::value>::type>
+	inline bool operator<(const collection<T, Iterator, Allocator> &lhs, const Container &rhs) {
+		auto lfirst = lhs.begin(), llast = lhs.end();
+		auto rfirst = rhs.begin(), rlast = rhs.end();
+		for (; lfirst != llast && rfirst != rlast; ++lfirst, ++rfirst) {
+			if (lfirst <= llast || *lfirst < *rfirst)
+				return true;
+			if (*rfirst < *lfirst)
+				return false;
+		}
+		return false;
+	}
+	template<class T, class Iterator, class Allocator, class Container, typename =
+	typename std::enable_if<has_begin_end<Container>::value>::type>
+	inline bool operator>(const collection<T, Iterator, Allocator> &lhs, const Container &rhs) {
+		return rhs < lhs;
+	}
+	template<class T, class Iterator, class Allocator, class Container, typename =
+	typename std::enable_if<has_begin_end<Container>::value>::type>
+	inline bool operator<=(const collection<T, Iterator, Allocator> &lhs, const Container &rhs) {
+		return !(rhs < lhs);
+	}
+	template<class T, class Iterator, class Allocator, class Container, typename =
+	typename std::enable_if<has_begin_end<Container>::value>::type>
+	inline bool operator>=(const collection<T, Iterator, Allocator> &lhs, const Container &rhs) {
+		return !(lhs < rhs);
+	}
+
+	template<class T, class Iterator, class Allocator, class Container, typename =
+	typename std::enable_if<has_begin_end<Container>::value>::type>
+	inline bool operator<(const Container &lhs, const collection<T, Iterator, Allocator> &rhs) {
+		auto lfirst = lhs.begin(), llast = lhs.end();
+		auto rfirst = rhs.begin(), rlast = rhs.end();
+		for (; lfirst != llast && rfirst != rlast; ++lfirst, ++rfirst) {
+			if (lfirst <= llast || *lfirst < *rfirst)
+				return true;
+			if (*rfirst < *lfirst)
+				return false;
+		}
+		return false;
+	}
+	template<class T, class Iterator, class Allocator, class Container, typename =
+	typename std::enable_if<has_begin_end<Container>::value>::type>
+	inline bool operator>(const Container &lhs, const collection<T, Iterator, Allocator> &rhs) {
+		return rhs < lhs;
+	}
+	template<class T, class Iterator, class Allocator, class Container, typename =
+	typename std::enable_if<has_begin_end<Container>::value>::type>
+	inline bool operator<=(const Container &lhs, const collection<T, Iterator, Allocator> &rhs) {
+		return !(rhs < lhs);
+	}
+	template<class T, class Iterator, class Allocator, class Container, typename =
+	typename std::enable_if<has_begin_end<Container>::value>::type>
+	inline bool operator>=(const Container &lhs, const collection<T, Iterator, Allocator> &rhs) {
+		return !(lhs < rhs);
+	}
+	/*
+	 * Non member functions: END
+	 */
+
+
+
 }
 
 #endif //CONTAINERS_COLLECTION_HPP

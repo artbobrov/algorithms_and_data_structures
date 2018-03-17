@@ -160,7 +160,7 @@ namespace ctl {
 		typedef std::function<bool(const_reference, const_reference)> comparer;
 	private:
 		iterator _begin, _end, _storage_end;
-	private:
+	private: // memory methods
 		inline void _allocate(size_type n);
 		inline void _deallocate_data(iterator from, iterator to);
 		inline void _destruct_at_end(iterator new_end);
@@ -181,7 +181,7 @@ namespace ctl {
 			typename = typename std::enable_if<is_forward_iterator<InputIterator>::value
 				                                   && is_forward_iterator<OutputIterator>::value>::type>
 		inline OutputIterator _copy(InputIterator first, InputIterator last, OutputIterator result);
-
+	private: // support methods
 		inline size_type _recommend(size_type new_size);
 		inline iterator _move_right(iterator begin, iterator end, size_type offset);
 	public:
@@ -240,6 +240,12 @@ namespace ctl {
 		inline iterator erase(const_iterator first, const_iterator last) override;
 		inline iterator erase(size_type first, size_type last) override {
 			return erase(begin() + first, begin() + last);
+		}
+		template<class... Args>
+		inline reference emplace(const_iterator position, Args &&... args);
+		template<class... Args>
+		inline reference emplace(size_type idx, Args &&... args) {
+			return emplace(begin() + idx, std::forward<Args>(args)...);
 		}
 		template<class... Args>
 		inline reference emplace_back(Args &&... args);
@@ -342,9 +348,34 @@ namespace ctl {
 		return !(lhs == rhs);
 	}
 
+	template<class T, class Allocator>
+	inline bool operator<(const vector<T, Allocator> &lhs, const vector<T, Allocator> &rhs) {
+		auto lfirst = lhs.begin(), llast = lhs.end();
+		auto rfirst = rhs.begin(), rlast = rhs.end();
+		for (; lfirst != llast && rfirst != rlast; ++lfirst, ++rfirst) {
+			if (lfirst <= llast || *lfirst < *rfirst)
+				return true;
+			if (*rfirst < *lfirst)
+				return false;
+		}
+		return false;
+	}
+	template<class T, class Allocator>
+	inline bool operator>(const vector<T, Allocator> &lhs, const vector<T, Allocator> &rhs) {
+		return rhs < lhs;
+	}
+	template<class T, class Allocator>
+	inline bool operator<=(const vector<T, Allocator> &lhs, const vector<T, Allocator> &rhs) {
+		return !(rhs < lhs);
+	}
+	template<class T, class Allocator>
+	inline bool operator>=(const vector<T, Allocator> &lhs, const vector<T, Allocator> &rhs) {
+		return !(lhs < rhs);
+	}
 	/*
 	 * Non member functions: END
 	 */
+
 	template<class T, class Allocator>
 	void vector<T, Allocator>::_allocate(size_type n) {
 		if (n > this->max_size())
@@ -436,7 +467,7 @@ namespace ctl {
 
 			*new_position = std::move(*end);
 		}
-		return result;
+		return result + 1;
 	}
 	template<class T, class Allocator>
 	vector<T, Allocator>::vector(size_type count, const Allocator &alloc): vector(alloc) {
@@ -553,15 +584,31 @@ namespace ctl {
 	template<class T, class Allocator>
 	template<class... Args>
 	typename vector<T, Allocator>::reference vector<T, Allocator>::emplace_back(Args &&...args) {
-		if (_end < _storage_end) {
-			_construct_at_end(std::forward<Args>(args)...);
-		} else {
+		if (size() >= capacity()) {
 			vector other = vector(_recommend(size() + 1), this->allocator());
 			other._end = std::move(begin(), end(), other.begin());
-			other._construct_at_end(std::forward<Args>(args)...);
 			swap(other);
 		}
+		_construct_at_end(std::forward<Args>(args)...);
 		return back();
+	}
+	template<class T, class Allocator>
+	template<class... Args>
+	typename vector<T, Allocator>::reference vector<T, Allocator>::emplace(const_iterator position, Args &&...args) {
+		size_type __capacity = capacity();
+		iterator _it;
+		if (size() < __capacity) {
+			_end = _move_right(position - 1, end() - 1, 1);
+			_it = position;
+		} else {
+			vector other = vector(_recommend(size() + 1), this->allocator());
+			_it = std::move(begin(), position, other.begin());
+			other._end = std::move(position + 1, end(), _it + 1);
+			swap(other);
+		}
+
+		this->_allocator.construct(_it.data_point, std::forward<Args>(args)...);
+		return *_it;
 	}
 	template<class T, class Allocator>
 	void vector<T, Allocator>::fill(iterator first, iterator last, const_reference value) {
@@ -602,7 +649,7 @@ namespace ctl {
 		size_type __capacity = capacity();
 		iterator _it;
 		if (size() + count <= __capacity) {
-			_end = _move_right(position - 1, end() - 1, count) + 1;
+			_end = _move_right(position - 1, end() - 1, count);
 			_it = position;
 		} else {
 			vector other = vector(_recommend(size() + count), this->allocator());
@@ -620,7 +667,7 @@ namespace ctl {
 		size_type __capacity = capacity();
 		iterator _it;
 		if (size() < __capacity) {
-			_end = _move_right(position - 1, end() - 1, 1) + 1;
+			_end = _move_right(position - 1, end() - 1, 1);
 			_it = position;
 		} else {
 			vector other = vector(_recommend(size() + 1), this->allocator());
@@ -642,7 +689,7 @@ namespace ctl {
 		iterator _it;
 
 		if (size() + count <= __capacity) {
-			_end = _move_right(position - 1, end() - 1, count) + 1;
+			_end = _move_right(position - 1, end() - 1, count);
 			_it = position;
 		} else {
 			vector other = vector(_recommend(size() + count), this->allocator());
@@ -672,7 +719,7 @@ namespace ctl {
 	}
 	template<class T, class Allocator>
 	void vector<T, Allocator>::push_back(const_reference value) {
-		if (_end < _storage_end) {
+		if (size() < capacity()) {
 			_construct_at_end(value);
 		} else {
 			vector other = vector(_recommend(size() + 1), this->allocator());
@@ -711,8 +758,8 @@ namespace ctl {
 	}
 	template<class T, class Allocator>
 	void vector<T, Allocator>::push_front(const_reference value) {
-		if (_end < _storage_end) {
-			_end = _move_right(begin() - 1, end() - 1, 1) + 1;
+		if (size() < capacity()) {
+			_end = _move_right(begin() - 1, end() - 1, 1);
 		} else {
 			vector other = vector(_recommend(size() + 1), this->allocator());
 			other._end = std::move(begin(), end(), other.begin() + 1);
@@ -722,8 +769,8 @@ namespace ctl {
 	}
 	template<class T, class Allocator>
 	void vector<T, Allocator>::push_front(value_type &&value) {
-		if (_end < _storage_end) {
-			_end = _move_right(begin() - 1, end() - 1, 1) + 1;
+		if (size() < capacity()) {
+			_end = _move_right(begin() - 1, end() - 1, 1);
 		} else {
 			vector other = vector(_recommend(size() + 1), this->allocator());
 			other._end = std::move(begin(), end(), other.begin() + 1);
@@ -735,7 +782,7 @@ namespace ctl {
 	void vector<T, Allocator>::push_front(size_type count, const_reference value) {
 		size_type __capacity = capacity();
 		if (size() + count <= __capacity) {
-			_end = _move_right(begin() - 1, end() - 1, count) + 1;
+			_end = _move_right(begin() - 1, end() - 1, count);
 		} else {
 			vector other = vector(_recommend(size() + count), this->allocator());
 			other._end = std::move(begin(), end(), other.begin() + count);

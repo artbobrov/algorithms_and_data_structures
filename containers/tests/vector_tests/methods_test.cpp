@@ -76,6 +76,15 @@ public:
 	std::vector<int> *stdvec;
 	ctl::vector<int> *ctlvec;
 };
+TEST_F(vector_test_fixture, compare_operators) {
+	ctl::vector<int> c = {1, 2, 3};
+	std::vector<int> s = {1, 3, 3};
+	ASSERT_LT(c, s);
+	ASSERT_GT(s, c);
+	ctl::vector<int> c1 = {1, 2, 3, 4};
+
+	ASSERT_LT(c, c1);
+}
 
 TEST_F(vector_test_fixture, append_subsequence) {
 	ctl::vector<int> origin = ctl::vector<int>(*ctlvec);
@@ -117,6 +126,17 @@ TEST_F(vector_test_fixture, count) {
 	ASSERT_EQ(result, std::count_if(stdvec->begin(), stdvec->end(), [](int value) { return value % 2 != 0; }));
 }
 
+TEST_F(vector_test_fixture, emplace) {
+	auto value = get_value();
+	auto size = ctlvec->size();
+	auto offset = this->get_size(size);
+	ctlvec->emplace(offset, value);
+	stdvec->emplace(stdvec->begin() + offset, value);
+
+	ASSERT_GE(ctlvec->capacity(), ctlvec->size());
+	ASSERT_EQ(size + 1, ctlvec->size());
+	ASSERT_EQ(*ctlvec, *stdvec);
+}
 TEST_F(vector_test_fixture, emplace_back) {
 	auto value = get_value();
 	auto size = ctlvec->size();
@@ -150,7 +170,6 @@ TEST_F(vector_test_fixture, fill) {
 	auto diff = ctlvec->size() - idx;
 	ctlvec->fill(idx, idx + diff, value);
 	ASSERT_EQ(ctlvec->subsequence(idx, idx + diff).count(value), diff);
-
 	value = get_value();
 	auto size_diff = get_size(100);
 	ctlvec->fill(value, size_diff + ctlvec->size());
@@ -239,7 +258,7 @@ TEST_F(vector_test_fixture, pop_front) {
 	ctlvec->pop_front();
 	stdvec->erase(stdvec->begin());
 	ASSERT_EQ(*ctlvec, *stdvec);
-	auto size = this->get_size(std::min(this->get_size(1000), ctlvec->size()));
+	auto size = this->get_size(std::min(this->get_size(100), ctlvec->size()));
 	ctlvec->pop_front(size);
 	for (int i = 0; i < size; i++) { stdvec->erase(stdvec->begin()); }
 	ASSERT_EQ(*ctlvec, *stdvec);

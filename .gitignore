@@ -318,11 +318,3 @@ venv.bak/
 .mypy_cache/
 
 # End of https://www.gitignore.io/api/c++,clion,macos,python,pycharm,jetbrains,jupyternotebook
-
-collections/main\.cpp
-
-collections/CMakeLists\.txt
-
-containers/CMakeLists\.txt
-
-containers/main\.cpp
