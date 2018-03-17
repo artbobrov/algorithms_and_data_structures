@@ -140,6 +140,7 @@ namespace ctl {
 	               public collection<T, __vector_iterator<T>, Allocator>,
 	               public reservable,
 	               public resizable<T>,
+	               public data_accessible<T>,
 	               public element_accessible_modifiable<T, __vector_iterator<T>> {
 	public:
 		typedef Allocator allocator_type;
@@ -182,7 +183,7 @@ namespace ctl {
 		inline OutputIterator _copy(InputIterator first, InputIterator last, OutputIterator result);
 
 		inline size_type _recommend(size_type new_size);
-		inline void _shift_left(iterator begin, iterator end, size_type offset);
+		inline iterator _move_right(iterator begin, iterator end, size_type offset);
 	public:
 		inline explicit vector(const Allocator &alloc = Allocator())
 			: vector::collection(alloc), _begin(nullptr), _end(nullptr), _storage_end(nullptr) {}
@@ -219,7 +220,7 @@ namespace ctl {
 	public:
 		template<typename R>
 		inline R accumulate(R initial, R (*next_result)(R, const_reference));
-		inline void append(element_accessible_modifiable<value_type, iterator> &other) override;
+		inline void append(bidirectional_element_accessible_modifiable<value_type, iterator> &other) override;
 		inline reference at(size_type i) override;
 		inline const_reference at(size_type i) const override;
 
@@ -230,6 +231,9 @@ namespace ctl {
 
 		inline size_type capacity() const noexcept override { return static_cast<size_type>(_storage_end - _begin); }
 		inline void clear() noexcept override { _destruct_at_end(_begin); }
+
+		inline pointer data() noexcept override { return _begin.data_point; }
+		inline pointer const data() const noexcept override { return _begin.data_point; }
 
 		inline iterator erase(const_iterator position) override;
 		inline iterator erase(size_type position) override { return erase(begin() + position); }
@@ -295,12 +299,14 @@ namespace ctl {
 		inline vector<value_type, allocator_type> prefix(conformer predicate);
 
 		inline void reserve(size_type n) override;
-		inline void remove_all(const_reference item) override;
-		inline void remove_all(conformer predicate) override;
+		using element_accessible_modifiable<value_type, iterator>::remove_all;
+		inline void remove_all(iterator first, iterator last, const_reference item) override;
+		inline void remove_all(iterator first, iterator last, conformer predicate) override;
 		inline void remove_at(int idx) override { erase(begin() + idx); }
 		inline void remove(const_reference item) override;
-		inline void resize(size_type count) override;
-		inline void resize(size_type count, const value_type &value) override;
+		inline void resize(size_type n) override;
+		inline void resize(size_type n, const value_type &value) override;
+		inline vector reversed();
 
 		inline vector<value_type, allocator_type> subsequence(iterator from, iterator to);
 		inline vector<value_type, allocator_type> subsequence(size_type from, size_type to) {
@@ -317,29 +323,24 @@ namespace ctl {
 	/*
 	 * Non member functions: BEGIN
 	 */
-	//	template<class T, class Allocator, class Container, typename = typename std::enable_if<has_begin_end<Container>::value>::type>
-	//	inline bool operator==(const vector<T, Allocator> &lhs, const Container &rhs) {
-	//		auto _collection_iter = lhs.begin();
-	//		auto _container_iter = rhs.begin();
-	//
-	//		for (; _collection_iter != lhs.end() && _container_iter != rhs.end();
-	//		       ++_collection_iter, ++_container_iter) {
-	//			if (*_collection_iter != *_container_iter)
-	//				return false;
-	//		}
-	//		return _collection_iter == lhs.end() && _container_iter == rhs.end()
-	//			&& lhs.size() == rhs.size();
-	//	}
-	//	template<class T, class Allocator, class Container, typename = typename std::enable_if<has_begin_end<Container>::value>::type>
-	//	inline bool operator==(const Container &rhs, const vector<T, Allocator> &lhs) {
-	//		return lhs == rhs;
-	//	}
-	//
-	//	template<class T, class Allocator, class Container, typename = typename std::enable_if<has_begin_end<Container>::value>::type>
-	//	inline bool operator!=(const vector<T, Allocator> &lhs, const Container &rhs) { return !(lhs == rhs); }
-	//
-	//	template<class T, class Allocator, class Container, typename = typename std::enable_if<has_begin_end<Container>::value>::type>
-	//	inline bool operator!=(const Container &rhs, const vector<T, Allocator> &lhs) { return !(lhs == rhs); }
+	template<class T, class Allocator>
+	inline bool operator==(const vector<T, Allocator> &lhs, const vector<T, Allocator> &rhs) {
+		auto _collection_iter = lhs.begin();
+		auto _container_iter = rhs.begin();
+
+		for (; _collection_iter != lhs.end() && _container_iter != rhs.end();
+		       ++_collection_iter, ++_container_iter) {
+			if (*_collection_iter != *_container_iter)
+				return false;
+		}
+		return _collection_iter == lhs.end() && _container_iter == rhs.end()
+			&& lhs.size() == rhs.size();
+	}
+
+	template<class T, class Allocator>
+	inline bool operator!=(const vector<T, Allocator> &lhs, const vector<T, Allocator> &rhs) {
+		return !(lhs == rhs);
+	}
 
 	/*
 	 * Non member functions: END
@@ -353,13 +354,8 @@ namespace ctl {
 	}
 	template<class T, class Allocator>
 	void vector<T, Allocator>::_deallocate_data(iterator from, iterator to) {
-
-		iterator _start = from;
-		size_type _sz = static_cast<size_type>(to - from);
-		for (; from != to; ++from)
-			this->_allocator.destroy(from.data_point);
-		if (capacity() && _begin.data_point != nullptr)
-			this->_allocator.deallocate(_start.data_point, _sz);
+		size_type _sz = ctl::distance(to, from);
+		this->_allocator.deallocate(from.data_point, _sz);
 	}
 
 	template<class T, class Allocator>
@@ -431,12 +427,16 @@ namespace ctl {
 		return std::max(2 * capacity(), new_size);
 	}
 	template<class T, class Allocator>
-	void vector<T, Allocator>::_shift_left(iterator begin, iterator end, size_type offset) {
+	typename vector<T, Allocator>::iterator vector<T, Allocator>::_move_right(iterator begin,
+	                                                                          iterator end,
+	                                                                          size_type offset) {
+		iterator result = end + offset;
 		for (; begin != end; --end) {
 			iterator new_position = end + offset;
+
 			*new_position = std::move(*end);
 		}
-
+		return result;
 	}
 	template<class T, class Allocator>
 	vector<T, Allocator>::vector(size_type count, const Allocator &alloc): vector(alloc) {
@@ -520,7 +520,7 @@ namespace ctl {
 		return *(_begin + i);
 	}
 	template<class T, class Allocator>
-	void vector<T, Allocator>::append(element_accessible_modifiable<value_type, iterator> &other) {
+	void vector<T, Allocator>::append(bidirectional_element_accessible_modifiable<value_type, iterator> &other) {
 		if (size() + other.size() > capacity()) {
 			size_type __capacity = _recommend(size() + other.size());
 			vector tmp = vector(__capacity, this->allocator());
@@ -557,7 +557,7 @@ namespace ctl {
 			_construct_at_end(std::forward<Args>(args)...);
 		} else {
 			vector other = vector(_recommend(size() + 1), this->allocator());
-			other._end = _copy(begin(), end(), other.begin());
+			other._end = std::move(begin(), end(), other.begin());
 			other._construct_at_end(std::forward<Args>(args)...);
 			swap(other);
 		}
@@ -601,13 +601,14 @@ namespace ctl {
 	                                                                     const_reference value) {
 		size_type __capacity = capacity();
 		iterator _it;
-		if (__capacity <= count && size() + count <= __capacity) {
-			_shift_left(position, end(), count);
+		if (size() + count <= __capacity) {
+			_end = _move_right(position - 1, end() - 1, count) + 1;
 			_it = position;
 		} else {
 			vector other = vector(_recommend(size() + count), this->allocator());
-			_it = _copy(begin(), position, other.begin());
-			_construct_at_end(position, end());
+			_it = std::move(begin(), position, other.begin());
+			other._end = std::move(position, end(), _it + count);
+
 			swap(other);
 		}
 
@@ -619,12 +620,12 @@ namespace ctl {
 		size_type __capacity = capacity();
 		iterator _it;
 		if (size() < __capacity) {
-			_shift_left(position, end(), 1);
+			_end = _move_right(position - 1, end() - 1, 1) + 1;
 			_it = position;
 		} else {
 			vector other = vector(_recommend(size() + 1), this->allocator());
-			_it = _copy(begin(), position, other.begin());
-			_construct_at_end(position, end());
+			_it = std::move(begin(), position, other.begin());
+			other._end = std::move(position + 1, end(), _it + 1);
 			swap(other);
 		}
 
@@ -641,12 +642,12 @@ namespace ctl {
 		iterator _it;
 
 		if (size() + count <= __capacity) {
-			_shift_left(position, end(), static_cast<size_type>(count));
+			_end = _move_right(position - 1, end() - 1, count) + 1;
 			_it = position;
 		} else {
 			vector other = vector(_recommend(size() + count), this->allocator());
-			_it = _copy(begin(), position, other.begin());
-			_construct_at_end(position, end());
+			_it = std::move(begin(), position, other.begin());
+			other._end = std::move(position + count, end(), _it + count);
 			swap(other);
 		}
 		_copy(first, last, _it);
@@ -675,7 +676,7 @@ namespace ctl {
 			_construct_at_end(value);
 		} else {
 			vector other = vector(_recommend(size() + 1), this->allocator());
-			other._end = _copy(begin(), end(), other.begin());
+			other._end = std::move(begin(), end(), other.begin());
 			other._construct_at_end(value);
 			swap(other);
 		}
@@ -687,7 +688,7 @@ namespace ctl {
 			_construct_at_end(count, value);
 		} else {
 			vector other = vector(_recommend(size() + count), this->allocator());
-			other._end = _copy(begin(), end(), other.begin());
+			other._end = std::move(begin(), end(), other.begin());
 			other._construct_at_end(count, value);
 			swap(other);
 		}
@@ -701,7 +702,7 @@ namespace ctl {
 		if (__size + 1 > __capacity) {
 			auto sz = _recommend(__size + 1);
 			vector other = vector(_recommend(__size + 1), this->allocator());
-			other._end = _copy(begin(), end(), other.begin());
+			other._end = std::move(begin(), end(), other.begin());
 			swap(other);
 
 		}
@@ -711,10 +712,10 @@ namespace ctl {
 	template<class T, class Allocator>
 	void vector<T, Allocator>::push_front(const_reference value) {
 		if (_end < _storage_end) {
-			_shift_left(begin(), end(), 1);
+			_end = _move_right(begin() - 1, end() - 1, 1) + 1;
 		} else {
 			vector other = vector(_recommend(size() + 1), this->allocator());
-			other._end = _copy(begin(), end(), other.begin() + 1);
+			other._end = std::move(begin(), end(), other.begin() + 1);
 			swap(other);
 		}
 		*_begin = value;
@@ -722,10 +723,10 @@ namespace ctl {
 	template<class T, class Allocator>
 	void vector<T, Allocator>::push_front(value_type &&value) {
 		if (_end < _storage_end) {
-			_shift_left(begin(), end(), 1);
+			_end = _move_right(begin() - 1, end() - 1, 1) + 1;
 		} else {
 			vector other = vector(_recommend(size() + 1), this->allocator());
-			other._end = _copy(begin(), end(), other.begin() + 1);
+			other._end = std::move(begin(), end(), other.begin() + 1);
 			swap(other);
 		}
 		*_begin = std::move(value);
@@ -733,9 +734,11 @@ namespace ctl {
 	template<class T, class Allocator>
 	void vector<T, Allocator>::push_front(size_type count, const_reference value) {
 		size_type __capacity = capacity();
-		if (size() + count > __capacity) {
+		if (size() + count <= __capacity) {
+			_end = _move_right(begin() - 1, end() - 1, count) + 1;
+		} else {
 			vector other = vector(_recommend(size() + count), this->allocator());
-			other._end = _copy(begin(), end(), other.begin() + count);
+			other._end = std::move(begin(), end(), other.begin() + count);
 			swap(other);
 		}
 		_construct(begin(), begin() + count, value);
@@ -757,40 +760,31 @@ namespace ctl {
 	void vector<T, Allocator>::reserve(size_type n) {
 		if (n > this->max_size())
 			throw std::length_error("ctl vector");
-		if (n > capacity()) {
-			vector other = vector(_recommend(n), this->allocator());
-			other._end = _copy(begin(), end(), other.begin());
+		if (n > size()) {
+			vector other = vector(n, this->allocator());
+			other._end = std::move(begin(), end(), other.begin());
 			swap(other);
 		}
 	}
+	template<class T, class Allocator>
+	void vector<T, Allocator>::remove_all(iterator first, iterator last, const_reference item) {
+		iterator result = first;
+		for (; first != last; ++first)
+			if (!(*first == item))
+				*result++ = *first;
 
-	template<class T, class Allocator>
-	void vector<T, Allocator>::remove_all(const_reference item) {
-		iterator first = begin(), last = begin();
-		for (iterator it = begin(); it != end(); ++it) {
-			if (*it == item)
-				++last;
-			else {
-				if (first != last)
-					erase(first, last);
-				first = last = it;
-			}
-		}
-	}
-	template<class T, class Allocator>
-	void vector<T, Allocator>::remove_all(conformer predicate) {
-		iterator first = begin(), last = begin();
-		for (iterator it = begin(); it != end(); ++it) {
-			if (predicate(*it))
-				++last;
-			else {
-				if (first != last)
-					erase(first, last);
-				first = last = it;
-			}
-		}
+		_end = result;
 	}
 
+	template<class T, class Allocator>
+	void vector<T, Allocator>::remove_all(iterator first, iterator last, conformer predicate) {
+		iterator result = first;
+		for (; first != last; ++first)
+			if (!predicate(*first))
+				*result++ = *first;
+
+		_end = result;
+	}
 	template<class T, class Allocator>
 	void vector<T, Allocator>::remove(const_reference item) {
 		iterator it = this->first(item);
@@ -799,21 +793,28 @@ namespace ctl {
 	}
 
 	template<class T, class Allocator>
-	void vector<T, Allocator>::resize(size_type count) {
+	void vector<T, Allocator>::resize(size_type n) {
 		size_type _size = size();
-		if (_size < count)
-			_construct_at_end(count - _size);
-		else if (_size > count)
-			_destruct_at_end(_begin + count);
+		if (n != _size) {
+			vector other = vector(n, this->allocator());
+			other._end = std::move(begin(), begin() + n, other.begin());
+			swap(other);
+		}
 	}
 
 	template<class T, class Allocator>
-	void vector<T, Allocator>::resize(size_type count, const value_type &value) {
+	void vector<T, Allocator>::resize(size_type n, const value_type &value) {
 		size_type _size = size();
-		if (_size < count)
-			_construct_at_end(count - _size, value);
-		else if (_size > count)
-			_destruct_at_end(_begin + count);
+		if (_size < n)
+			_construct_at_end(n - _size, value);
+		else if (_size > n)
+			_destruct_at_end(_begin + n);
+	}
+	template<class T, class Allocator>
+	vector<T, Allocator> vector<T, Allocator>::reversed() {
+		vector<value_type, allocator_type> other(*this);
+		other.reverse();
+		return other;
 	}
 	template<class T, class Allocator>
 	template<typename R>
@@ -844,8 +845,9 @@ namespace ctl {
 		size_type _size = size();
 		if (capacity() > _size) {
 			vector other = vector(_size, this->allocator());
-			other._end = _copy(begin(), end(), other.begin());
+			other._end = std::move(begin(), end(), other.begin());
 			swap(other);
+
 		}
 	}
 	template<class T, class Allocator>

@@ -1,64 +1,9 @@
 /*
 namespace ctl {
 
-	template<class T>
-	struct __vector_iterator : public std::iterator<std::random_access_iterator_tag, T> {
-		typedef T value_type;
-		typedef value_type &reference;
-		typedef const value_type &const_reference;
-
-		typedef value_type *data;
-		typedef size_t size_type;
-	public: // properties
-		mutable data data_point;
-	public: // methods
-		explicit __vector_iterator(data point = nullptr);
-
-		__vector_iterator(const __vector_iterator &other);
-
-		__vector_iterator &operator=(const __vector_iterator &other);
-
-		__vector_iterator &operator=(__vector_iterator &&other) noexcept;
-
-		friend bool operator==(const __vector_iterator &__x, const __vector_iterator &__y);
-		friend bool operator!=(const __vector_iterator &__x, const __vector_iterator &__y);
-
-		reference operator*();
-		const_reference operator*() const;
-		T *operator->();
-
-		__vector_iterator &plus(size_type idx);
-		__vector_iterator &minus(size_type idx);
-		__vector_iterator &operator++();
-		__vector_iterator operator++(int);
-		const __vector_iterator &operator++() const;
-		const __vector_iterator operator++(int) const;
-		__vector_iterator &operator--();
-		__vector_iterator operator--(int);
-
-		friend long long operator-(const __vector_iterator &__x, const __vector_iterator &__y);
-		__vector_iterator &operator+=(int j);
-		__vector_iterator &operator-=(int j);
-
-		friend bool operator<(const __vector_iterator &lhs, const __vector_iterator &rhs);
-		friend bool operator>(const __vector_iterator &lhs, const __vector_iterator &rhs);
-		friend bool operator<=(const __vector_iterator &lhs, const __vector_iterator &rhs);
-		friend bool operator>=(const __vector_iterator &lhs, const __vector_iterator &rhs);
-	};
-
-	template<class T>
-	__vector_iterator<T> operator+(const __vector_iterator<T> &__x,
-	                               typename __vector_iterator<T>::size_type idx);
-	template<class T>
-	__vector_iterator<T> operator-(const __vector_iterator<T> &__x,
-	                               typename __vector_iterator<T>::size_type idx);
-	template<class T>
-	__vector_iterator<T> operator+(typename __vector_iterator<T>::size_type idx,
-	                               const __vector_iterator<T> &__x);
-
 	template<class T, class Allocator = std::allocator<T>>
 	class vector {
-	public:
+	public: // typedefs
 		typedef Allocator allocator_type;
 		typedef T value_type;
 		typedef __vector_iterator<T> iterator;
