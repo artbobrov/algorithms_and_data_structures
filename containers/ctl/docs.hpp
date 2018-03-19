@@ -76,8 +76,8 @@ namespace ctl {
 		const_reverse_iterator crbegin() const noexcept;
 		const_reverse_iterator crend() const noexcept;
 
-        pointer data() noexcept;
-        pointer data() const noexcept;
+		pointer data() noexcept;
+		pointer data() const noexcept;
 
 		template<class... Args>
 		reference emplace(const_iterator position, Args &&... args);
