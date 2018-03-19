@@ -10,17 +10,13 @@
 #include <iterator>
 
 #include "size_accessible.hpp"
-
+#include "../base/object.hpp"
 namespace ctl {
-	class reservable {
+	class capacity_accessible : public virtual object {
 	public:
 		typedef size_t size_type;
 	public:
 		inline virtual size_type capacity() const noexcept = 0;
-
-		inline virtual void reserve(size_type n) = 0; // stl
-
-		inline virtual void shrink_to_fit() noexcept = 0; // stl
 	};
 }
 

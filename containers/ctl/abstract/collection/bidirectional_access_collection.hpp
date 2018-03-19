@@ -1,20 +1,20 @@
 //
-// Created by Artem Bobrov on 25.01.2018.
+// Created by Artem Bobrov on 20.03.2018.
 //
 
-#ifndef CONTAINERS_COLLECTION_HPP
-#define CONTAINERS_COLLECTION_HPP
+#ifndef CONTAINERS_BIDIRECTIONAL_ACCESS_COLLECTION_HPP
+#define CONTAINERS_BIDIRECTIONAL_ACCESS_COLLECTION_HPP
 
 #include <list>
 #include <set>
 
-#include "../interface/interfaces.hpp"
-#include "../interface/meta.hpp"
-#include "sequence.hpp"
+#include "../../interface/interfaces.hpp"
+#include "../../interface/meta.hpp"
+#include "../sequence/random_access_sequence.hpp"
 
 namespace ctl {
 	template<class T, class Iterator, class Allocator = std::allocator<T> >
-	class collection : public sequence<T, Iterator> {
+	class bidirectional_access_collection : public virtual bidirectional_access_sequence<T, Iterator> {
 	public:
 		typedef Allocator allocator_type;
 		typedef T value_type;
@@ -32,48 +32,29 @@ namespace ctl {
 		typedef std::function<bool(const_reference, const_reference)> comparer;
 		typedef std::function<reference(reference)> map_action;
 	public:
-		explicit collection(const Allocator &alloc = Allocator()) : _allocator(alloc) {}
-		inline virtual ~collection() = default;
+		explicit bidirectional_access_collection(const Allocator &alloc = Allocator()) : _allocator(alloc) {}
+		inline virtual ~bidirectional_access_collection() = default;
 	public:
 		inline allocator_type allocator() const noexcept { return _allocator; } // stl
 
-		inline size_type index_of(const_reference value, size_type first, size_type last) const; // qt
-		inline size_type index_of(const_reference value) const {
-			return index_of(value, 0, ctl::distance(this->begin(), this->end()));
-		} // qt
 		inline size_type iterator_of(const_reference value, iterator first, iterator last) const; // qt
 
-		inline void reverse(); // c#
+		inline void reverse() { reverse(this->begin(), this->end()); } // c#
 		inline void reverse(iterator first, iterator last); // c#
-		inline void reverse(size_type first, size_type last); // c#
 
 	protected:
 		allocator_type _allocator;
 	};
 	template<class T, class Iterator, class Allocator>
-	typename collection<T, Iterator, Allocator>::size_type collection<T, Iterator, Allocator>::index_of(const T &value,
-	                                                                                                    size_type first,
-	                                                                                                    size_type last) const {
-		iterator _first = this->begin() + first;
-		iterator _last = this->begin() + last;
-		for (; _first != _last && *_first != value; ++_first) {}
-		return _first - this->begin();
-	}
-	template<class T, class Iterator, class Allocator>
-	void collection<T, Iterator, Allocator>::reverse() {
-		reverse(this->begin(), this->end());
-	}
-	template<class T, class Iterator, class Allocator>
-	typename collection<T, Iterator, Allocator>::size_type collection<T,
-	                                                                  Iterator,
-	                                                                  Allocator>::iterator_of(const T &value,
-	                                                                                          Iterator first,
-	                                                                                          Iterator last) const {
+	typename bidirectional_access_collection<T, Iterator, Allocator>::size_type
+	bidirectional_access_collection<T, Iterator, Allocator>::iterator_of(const T &value,
+	                                                                     Iterator first,
+	                                                                     Iterator last) const {
 		for (; first != last && *first != value; ++first) {}
 		return first;
 	}
 	template<class T, class Iterator, class Allocator>
-	void collection<T, Iterator, Allocator>::reverse(Iterator first, Iterator last) {
+	void bidirectional_access_collection<T, Iterator, Allocator>::reverse(Iterator first, Iterator last) {
 		using std::swap;
 		while (first != last) {
 			if (first == --last)
@@ -82,17 +63,6 @@ namespace ctl {
 			++first;
 		}
 	}
-	template<class T, class Iterator, class Allocator>
-	void collection<T, Iterator, Allocator>::reverse(size_type first, size_type last) {
-		using std::swap;
-		while (first != last) {
-			if (first == --last)
-				break;
-			swap(this[first], this[last]);
-			++first;
-		}
-	}
-
 	/*
 	 * Non member functions: BEGIN
 	 */
@@ -101,7 +71,7 @@ namespace ctl {
 	// the brute force solution: implement operator== for each pair of ctl containers
 	template<class T, class Iterator, class Allocator, class Container, typename =
 	typename std::enable_if<has_begin_end<Container>::value>::type>
-	inline bool operator==(const collection<T, Iterator, Allocator> &lhs, const Container &rhs) {
+	inline bool operator==(const bidirectional_access_collection<T, Iterator, Allocator> &lhs, const Container &rhs) {
 		auto _collection_iter = lhs.begin();
 		auto _container_iter = rhs.begin();
 
@@ -115,25 +85,25 @@ namespace ctl {
 
 	template<class T, class Iterator, class Allocator, class Container, typename =
 	typename std::enable_if<has_begin_end<Container>::value>::type>
-	inline bool operator==(const Container &lhs, const collection<T, Iterator, Allocator> &rhs) {
+	inline bool operator==(const Container &lhs, const bidirectional_access_collection<T, Iterator, Allocator> &rhs) {
 		return rhs == lhs;
 	}
 
 	template<class T, class Iterator, class Allocator, class Container, typename =
 	typename std::enable_if<has_begin_end<Container>::value>::type>
-	inline bool operator!=(const collection<T, Iterator, Allocator> &lhs, const Container &rhs) {
+	inline bool operator!=(const bidirectional_access_collection<T, Iterator, Allocator> &lhs, const Container &rhs) {
 		return !(lhs == rhs);
 	}
 
 	template<class T, class Iterator, class Allocator, class Container, typename =
 	typename std::enable_if<has_begin_end<Container>::value>::type>
-	inline bool operator!=(const Container &lhs, const collection<T, Iterator, Allocator> &rhs) {
+	inline bool operator!=(const Container &lhs, const bidirectional_access_collection<T, Iterator, Allocator> &rhs) {
 		return !(rhs == lhs);
 	}
 
 	template<class T, class Iterator, class Allocator, class Container, typename =
 	typename std::enable_if<has_begin_end<Container>::value>::type>
-	inline bool operator<(const collection<T, Iterator, Allocator> &lhs, const Container &rhs) {
+	inline bool operator<(const bidirectional_access_collection<T, Iterator, Allocator> &lhs, const Container &rhs) {
 		auto lfirst = lhs.begin(), llast = lhs.end();
 		auto rfirst = rhs.begin(), rlast = rhs.end();
 		for (; lfirst != llast && rfirst != rlast; ++lfirst, ++rfirst) {
@@ -146,23 +116,23 @@ namespace ctl {
 	}
 	template<class T, class Iterator, class Allocator, class Container, typename =
 	typename std::enable_if<has_begin_end<Container>::value>::type>
-	inline bool operator>(const collection<T, Iterator, Allocator> &lhs, const Container &rhs) {
+	inline bool operator>(const bidirectional_access_collection<T, Iterator, Allocator> &lhs, const Container &rhs) {
 		return rhs < lhs;
 	}
 	template<class T, class Iterator, class Allocator, class Container, typename =
 	typename std::enable_if<has_begin_end<Container>::value>::type>
-	inline bool operator<=(const collection<T, Iterator, Allocator> &lhs, const Container &rhs) {
+	inline bool operator<=(const bidirectional_access_collection<T, Iterator, Allocator> &lhs, const Container &rhs) {
 		return !(rhs < lhs);
 	}
 	template<class T, class Iterator, class Allocator, class Container, typename =
 	typename std::enable_if<has_begin_end<Container>::value>::type>
-	inline bool operator>=(const collection<T, Iterator, Allocator> &lhs, const Container &rhs) {
+	inline bool operator>=(const bidirectional_access_collection<T, Iterator, Allocator> &lhs, const Container &rhs) {
 		return !(lhs < rhs);
 	}
 
 	template<class T, class Iterator, class Allocator, class Container, typename =
 	typename std::enable_if<has_begin_end<Container>::value>::type>
-	inline bool operator<(const Container &lhs, const collection<T, Iterator, Allocator> &rhs) {
+	inline bool operator<(const Container &lhs, const bidirectional_access_collection<T, Iterator, Allocator> &rhs) {
 		auto lfirst = lhs.begin(), llast = lhs.end();
 		auto rfirst = rhs.begin(), rlast = rhs.end();
 		for (; lfirst != llast && rfirst != rlast; ++lfirst, ++rfirst) {
@@ -175,25 +145,21 @@ namespace ctl {
 	}
 	template<class T, class Iterator, class Allocator, class Container, typename =
 	typename std::enable_if<has_begin_end<Container>::value>::type>
-	inline bool operator>(const Container &lhs, const collection<T, Iterator, Allocator> &rhs) {
+	inline bool operator>(const Container &lhs, const bidirectional_access_collection<T, Iterator, Allocator> &rhs) {
 		return rhs < lhs;
 	}
 	template<class T, class Iterator, class Allocator, class Container, typename =
 	typename std::enable_if<has_begin_end<Container>::value>::type>
-	inline bool operator<=(const Container &lhs, const collection<T, Iterator, Allocator> &rhs) {
+	inline bool operator<=(const Container &lhs, const bidirectional_access_collection<T, Iterator, Allocator> &rhs) {
 		return !(rhs < lhs);
 	}
 	template<class T, class Iterator, class Allocator, class Container, typename =
 	typename std::enable_if<has_begin_end<Container>::value>::type>
-	inline bool operator>=(const Container &lhs, const collection<T, Iterator, Allocator> &rhs) {
+	inline bool operator>=(const Container &lhs, const bidirectional_access_collection<T, Iterator, Allocator> &rhs) {
 		return !(lhs < rhs);
 	}
 	/*
 	 * Non member functions: END
 	 */
-
-
-
 }
-
-#endif //CONTAINERS_COLLECTION_HPP
+#endif //CONTAINERS_BIDIRECTIONAL_ACCESS_COLLECTION_HPP

@@ -25,7 +25,7 @@ namespace ctl {
 	}
 
 	template<class Iterator>
-	class iterable {
+	class iterable : public virtual object {
 	public:
 		typedef Iterator iterator;
 		typedef const Iterator const_iterator;

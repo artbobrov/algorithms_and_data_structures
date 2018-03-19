@@ -6,8 +6,8 @@
 #define CONTAINERS_VECTOR_HPP
 
 #include "../interface/interfaces.hpp"
-#include "../abstract/collection.hpp"
-#include "../abstract/sequence.hpp"
+#include "../abstract/collection/random_access_collection.hpp"
+#include "../abstract/sequence/random_access_sequence.hpp"
 
 #include <string>
 #include <algorithm>
@@ -136,12 +136,12 @@ namespace ctl {
 	}
 
 	template<class T, class Allocator = std::allocator<T>>
-	class vector : public object,
-	               public collection<T, __vector_iterator<T>, Allocator>,
-	               public reservable,
+	class vector : public random_access_collection<T, __vector_iterator<T>, Allocator>,
+	               public random_element_accessible_modifiable<T, __vector_iterator<T>>,
+	               public capacity_accessible,
+	               public revervable,
 	               public resizable<T>,
-	               public data_accessible<T>,
-	               public element_accessible_modifiable<T, __vector_iterator<T>> {
+	               public data_accessible<T> {
 	public:
 		typedef Allocator allocator_type;
 		typedef T value_type;
@@ -186,7 +186,7 @@ namespace ctl {
 		inline iterator _move_right(iterator begin, iterator end, size_type offset);
 	public:
 		inline explicit vector(const Allocator &alloc = Allocator())
-			: vector::collection(alloc), _begin(nullptr), _end(nullptr), _storage_end(nullptr) {}
+			: vector::random_access_collection(alloc), _begin(nullptr), _end(nullptr), _storage_end(nullptr) {}
 
 		inline explicit vector(size_type count, const Allocator &alloc = Allocator());
 		inline explicit vector(size_type count, const_reference value, const Allocator &alloc = Allocator());
@@ -252,10 +252,7 @@ namespace ctl {
 		inline iterator end() noexcept override { return _end; }
 		inline const_iterator end() const noexcept override { return _end; }
 
-		using sequence<value_type, iterator>::fill;
-		inline void fill(size_type first, size_type last, const_reference value) override {
-			fill(_begin + first, _begin + last, value);
-		}
+		using random_access_sequence<value_type, iterator>::fill;
 		inline void fill(iterator first, iterator last, const_reference value) override;
 		inline void fill(const_reference value, size_type size) override;
 		inline void filter(conformer predicate) override;
@@ -305,10 +302,9 @@ namespace ctl {
 		inline vector<value_type, allocator_type> prefix(conformer predicate);
 
 		inline void reserve(size_type n) override;
-		using element_accessible_modifiable<value_type, iterator>::remove_all;
+		using random_element_accessible_modifiable<value_type, iterator>::remove_all;
 		inline void remove_all(iterator first, iterator last, const_reference item) override;
 		inline void remove_all(iterator first, iterator last, conformer predicate) override;
-		inline void remove_at(int idx) override { erase(begin() + idx); }
 		inline void remove(const_reference item) override;
 		inline void resize(size_type n) override;
 		inline void resize(size_type n, const value_type &value) override;

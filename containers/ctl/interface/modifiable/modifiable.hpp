@@ -8,9 +8,9 @@
 #include <functional>
 #include <iterator>
 #include <memory>
-
+#include "../base/object.hpp"
 namespace ctl {
-	class modifiable {
+	class modifiable: public virtual object {
 	public:
 		inline virtual void clear() noexcept = 0; // stl
 	};

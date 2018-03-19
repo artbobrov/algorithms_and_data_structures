@@ -10,7 +10,7 @@ set(SOURCE_FILES
         tests/vector_tests/contructor_tests.cpp
         tests/vector_tests/methods_test.cpp
         tests
-        ctl)
+        ctl ctl/interface/modifiable/reservable.hpp ctl/abstract/sequence/bidirectional_access_sequence.hpp ctl/abstract/collection/bidirectional_access_collection.hpp)
 
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})

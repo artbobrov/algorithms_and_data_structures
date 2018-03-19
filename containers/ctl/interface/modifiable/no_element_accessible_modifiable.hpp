@@ -8,9 +8,10 @@
 #include <utility>
 
 #include "modifiable.hpp"
+#include "../base/object.hpp"
 namespace ctl {
 	template<class T, class Iterator>
-	class no_element_accessible_modifiable {
+	class no_element_accessible_modifiable: public virtual object {
 	public:
 		typedef T value_type;
 		typedef Iterator iterator;

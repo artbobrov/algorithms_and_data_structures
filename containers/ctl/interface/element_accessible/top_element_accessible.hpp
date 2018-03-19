@@ -4,9 +4,11 @@
 
 #ifndef CONTAINERS_TOP_ELEMENT_ACCESSIBLE_HPP
 #define CONTAINERS_TOP_ELEMENT_ACCESSIBLE_HPP
+#include "../base/object.hpp"
+
 namespace ctl {
 	template<class T>
-	class top_element_accessible {
+	class top_element_accessible:public virtual object {
 	public:
 		typedef T value_type;
 		typedef const value_type &const_reference;
