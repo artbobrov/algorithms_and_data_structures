@@ -9,13 +9,14 @@
 #include <memory>
 
 #include "../interfaces.hpp"
+#include "resizable.hpp"
 
 namespace ctl {
 	template<class T, class Iterator>
 	class bidirectional_element_accessible_modifiable : public virtual object,
 	                                                    public bidirectional_element_accessible<T>,
 	                                                    public modifiable,
-	                                                    public size_accessible,
+	                                                    public resizable<T>,
 	                                                    public virtual iterable<Iterator> {
 	public:
 		typedef T value_type;

@@ -138,9 +138,7 @@ namespace ctl {
 	template<class T, class Allocator = std::allocator<T>>
 	class vector : public random_access_collection<T, __vector_iterator<T>, Allocator>,
 	               public random_element_accessible_modifiable<T, __vector_iterator<T>>,
-	               public capacity_accessible,
 	               public revervable,
-	               public resizable<T>,
 	               public data_accessible<T> {
 	public:
 		typedef Allocator allocator_type;

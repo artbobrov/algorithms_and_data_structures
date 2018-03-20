@@ -9,7 +9,7 @@
 #include <iterator>
 #include "../base/object.hpp"
 namespace ctl {
-	class revervable : public virtual object {
+	class revervable : public virtual object, public capacity_accessible {
 	public:
 		typedef size_t size_type;
 	public:

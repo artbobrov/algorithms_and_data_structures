@@ -10,7 +10,7 @@
 #include "../base/object.hpp"
 namespace ctl {
 	template<class T>
-	class resizable : public virtual object {
+	class resizable : public virtual object, public size_accessible {
 	public:
 		typedef T value_type;
 		typedef value_type &reference;
