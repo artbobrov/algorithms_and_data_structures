@@ -8,8 +8,12 @@
 #include <iterator>
 #include <memory>
 
-#include "../interfaces.hpp"
+
 #include "resizable.hpp"
+#include "../base/object.hpp"
+#include "../element_accessible/bidirectional_element_accessible.hpp"
+#include "modifiable.hpp"
+#include "../iterable/iterable.hpp"
 
 namespace ctl {
 	template<class T, class Iterator>

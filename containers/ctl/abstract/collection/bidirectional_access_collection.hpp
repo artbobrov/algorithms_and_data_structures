@@ -106,8 +106,8 @@ namespace ctl {
 	inline bool operator<(const bidirectional_access_collection<T, Iterator, Allocator> &lhs, const Container &rhs) {
 		auto lfirst = lhs.begin(), llast = lhs.end();
 		auto rfirst = rhs.begin(), rlast = rhs.end();
-		for (; lfirst != llast && rfirst != rlast; ++lfirst, ++rfirst) {
-			if (lfirst <= llast || *lfirst < *rfirst)
+		for (; rfirst != rlast; ++lfirst, ++rfirst) {
+			if (lfirst == llast || *lfirst < *rfirst)
 				return true;
 			if (*rfirst < *lfirst)
 				return false;

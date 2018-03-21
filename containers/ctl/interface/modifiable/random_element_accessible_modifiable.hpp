@@ -8,8 +8,10 @@
 #include <iterator>
 #include <memory>
 
-#include "../interfaces.hpp"
 #include "bidirectional_element_accessible_modifiable.hpp"
+#include "../base/object.hpp"
+#include "../element_accessible/random_element_accessible.hpp"
+#include "../iterable/iterable.hpp"
 
 namespace ctl {
 	template<class T, class Iterator>

@@ -30,6 +30,8 @@ namespace ctl {
 		typedef std::function<void(reference)> action;
 		typedef std::function<bool(const_reference, const_reference)> comparer;
 	public:
+		explicit operator std::string() const noexcept override;
+	public:
 		inline bool contains(const_reference item) const; // qt
 		inline bool contains(conformer predicate) const; // qt
 
@@ -58,6 +60,14 @@ namespace ctl {
 		inline virtual std::list<value_type> to_std_list() const; // c#
 		inline virtual std::set<value_type> to_std_set() const; // c#
 	};
+	template<class T, class Iterator>
+	bidirectional_access_sequence<T, Iterator>::operator std::string() const noexcept {
+		using std::to_string;
+		std::string output;
+		for (const_reference element: *this)
+			output += to_string(element) + ' ';
+		return output;
+	}
 	template<class T, class Iterator>
 	bool bidirectional_access_sequence<T, Iterator>::contains(const_reference item) const {
 		for (const_reference element: *this)

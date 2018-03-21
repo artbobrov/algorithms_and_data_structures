@@ -214,7 +214,7 @@ namespace ctl {
 		vector &operator=(const vector &other);
 		vector &operator=(vector &&other) noexcept;
 
-		explicit operator std::string() const noexcept override;
+
 	public:
 		template<typename R>
 		inline R accumulate(R initial, R (*next_result)(R, const_reference));
@@ -524,14 +524,7 @@ namespace ctl {
 		other._begin = other._end = other._storage_end = nullptr;
 		return *this;
 	}
-	template<class T, class Allocator>
-	vector<T, Allocator>::operator std::string() const noexcept {
-		using std::to_string;
-		std::string output;
-		for (const_reference element: *this)
-			output += to_string(element) + ' ';
-		return output;
-	}
+
 	template<class T, class Allocator>
 	typename vector<T, Allocator>::reference vector<T, Allocator>::at(size_type i) {
 		if (i >= size())
