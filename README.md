@@ -5,3 +5,4 @@
 Implemented data structures:
 
 * vector
+* list
