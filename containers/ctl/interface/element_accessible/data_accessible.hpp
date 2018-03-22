@@ -4,10 +4,10 @@
 
 #ifndef CONTAINERS_DATA_ACCESSIBLE_H
 #define CONTAINERS_DATA_ACCESSIBLE_H
-
+#include "../base/object.hpp"
 namespace ctl {
 	template<class T>
-	class data_accessible {
+	class data_accessible: public virtual object {
 	public:
 		typedef T *pointer;
 	public:

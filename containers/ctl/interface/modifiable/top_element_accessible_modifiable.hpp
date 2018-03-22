@@ -7,10 +7,10 @@
 
 #include <utility>
 #include <iterator>
-
+#include "../base/object.hpp"
 namespace ctl {
 	template<class T>
-	class top_element_accessible_modifiable {
+	class top_element_accessible_modifiable : public virtual object {
 	public:
 		typedef T value_type;
 	public:

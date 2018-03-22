@@ -7,10 +7,11 @@
 
 #include <iterator>
 #include "bidirectional_element_accessible.hpp"
-
+#include "../base/object.hpp"
 namespace ctl {
 	template<class T>
-	class random_element_accessible : public bidirectional_element_accessible<T> {
+	class random_element_accessible : public virtual object,
+	                                  public bidirectional_element_accessible<T> {
 	public:
 		typedef T value_type;
 		typedef value_type &reference;
@@ -20,8 +21,8 @@ namespace ctl {
 		inline virtual reference at(size_type i) = 0; // stl
 		inline virtual const_reference at(size_type i) const = 0; // stl
 
-		inline reference operator[](size_type i) { return at(i); }  // stl
-		inline const_reference operator[](size_type i) const { return at(i); } // stl
+		inline reference operator[](size_type idx) { return at(idx); }  // stl
+		inline const_reference operator[](size_type idx) const { return at(idx); } // stl
 	};
 }
 

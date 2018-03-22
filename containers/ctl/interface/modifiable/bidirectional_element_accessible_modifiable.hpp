@@ -8,14 +8,20 @@
 #include <iterator>
 #include <memory>
 
-#include "../interfaces.hpp"
+
+#include "resizable.hpp"
+#include "../base/object.hpp"
+#include "../element_accessible/bidirectional_element_accessible.hpp"
+#include "modifiable.hpp"
+#include "../iterable/iterable.hpp"
 
 namespace ctl {
 	template<class T, class Iterator>
-	class bidirectional_element_accessible_modifiable : public bidirectional_element_accessible<T>,
-	                                      public modifiable,
-	                                      public size_accessible,
-	                                      public virtual iterable<Iterator> {
+	class bidirectional_element_accessible_modifiable : public virtual object,
+	                                                    public bidirectional_element_accessible<T>,
+	                                                    public modifiable,
+	                                                    public resizable<T>,
+	                                                    public virtual iterable<Iterator> {
 	public:
 		typedef T value_type;
 		typedef Iterator iterator;
@@ -53,11 +59,11 @@ namespace ctl {
 		inline virtual void push_front(value_type &&value) = 0; // qt
 		inline virtual void push_front(size_type count, const_reference value) = 0; // qt
 
-		inline virtual void remove_all(const_reference item) { remove_all(this->begin(), this->end(), item); } // qt
+		inline void remove_all(const_reference item) { remove_all(this->begin(), this->end(), item); } // qt
 		inline virtual void remove_all(iterator first, iterator last, const_reference item) = 0; // qt
-		inline virtual void remove_all(conformer predicate) { remove_all(this->begin(), this->end(), predicate); } // qt
+		inline void remove_all(conformer predicate) { remove_all(this->begin(), this->end(), predicate); } // qt
 		inline virtual void remove_all(iterator first, iterator last, conformer predicate) = 0; // qt
-		inline virtual void remove_at(int idx) = 0; // qt
+
 		inline virtual void remove(const_reference item) = 0; // qt
 		inline void remove_last() { pop_back(); } // qt
 		inline void remove_first() { pop_front(); } // qt

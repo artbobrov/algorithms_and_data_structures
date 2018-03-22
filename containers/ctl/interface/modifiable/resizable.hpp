@@ -7,10 +7,10 @@
 
 #include <iterator>
 #include <memory>
-
+#include "../base/object.hpp"
 namespace ctl {
-	template <class T>
-	class resizable {
+	template<class T>
+	class resizable : public virtual object, public size_accessible {
 	public:
 		typedef T value_type;
 		typedef value_type &reference;
@@ -22,6 +22,5 @@ namespace ctl {
 		inline virtual void resize(size_type count, const T &value) = 0; // stl
 	};
 }
-
 
 #endif //CONTAINERS_RESIZABLE_HPP

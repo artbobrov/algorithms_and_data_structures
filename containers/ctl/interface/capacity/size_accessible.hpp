@@ -7,9 +7,9 @@
 
 #include <memory>
 #include <functional>
-
+#include "../base/object.hpp"
 namespace ctl {
-	class size_accessible {
+	class size_accessible : public virtual  object {
 	public:
 		typedef size_t size_type;
 	public:

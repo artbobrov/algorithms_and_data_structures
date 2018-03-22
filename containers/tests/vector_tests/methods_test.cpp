@@ -10,27 +10,18 @@
 #include <random>
 #include <algorithm>
 #include <ostream>
+#include "../extra/generator.hpp"
 
-using namespace std::chrono_literals;
-using std::cout;
-using std::cerr;
-using std::endl;
-std::default_random_engine generator;
 
-template<class T>
-std::ostream &operator<<(std::ostream &os, const std::vector<T> &vec) {
-	for (auto &value: vec)
-		os << value << " ";
 
-	return os;
-}
+std::default_random_engine gen(static_cast<unsigned int>(time(0)));
 
 class vector_test_fixture : public ::testing::Test {
 public:
 	void fill(size_t size) {
 		std::uniform_int_distribution<> uid(0, 10);
 		for (int i = 0; i < size; i++) {
-			auto value = static_cast<int>(uid(generator));
+			auto value = static_cast<int>(uid(gen));
 			stdvec->push_back(value);
 			ctlvec->push_back(value);
 		}
@@ -38,17 +29,17 @@ public:
 
 	size_t get_size(size_t max_size) {
 		std::uniform_int_distribution<size_t> uid(1, static_cast<int>(max_size));
-		return uid(generator) - 1;
+		return uid(gen) - 1;
 	}
 
 	int get_value() {
 		std::uniform_int_distribution<int> uid(0, 10);
-		return uid(generator);
+		return uid(gen);
 	}
 
 	ctl::vector<int> *get_random_vector() {
 		ctl::vector<int> *vec = new ctl::vector<int>();
-		size_t size = get_size(10);
+		size_t size = get_size(100);
 
 		for (int i = 0; i < size; ++i) {
 			auto value = get_value();
@@ -63,7 +54,7 @@ protected:
 	}
 	void SetUp() override {
 		Test::SetUp();
-		generator = std::default_random_engine(time(0));
+		gen = std::default_random_engine(time(0));
 		stdvec = new std::vector<int>();
 		ctlvec = new ctl::vector<int>();
 		size_t size = get_size(1000000);

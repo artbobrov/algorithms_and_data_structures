@@ -8,14 +8,17 @@
 #include <iterator>
 #include <memory>
 
-#include "../interfaces.hpp"
 #include "bidirectional_element_accessible_modifiable.hpp"
+#include "../base/object.hpp"
+#include "../element_accessible/random_element_accessible.hpp"
+#include "../iterable/iterable.hpp"
 
 namespace ctl {
 	template<class T, class Iterator>
-	class element_accessible_modifiable : public bidirectional_element_accessible_modifiable<T, Iterator>,
-	                                      public random_element_accessible<T>,
-	                                      public virtual iterable<Iterator> {
+	class random_element_accessible_modifiable : public virtual object,
+	                                             public bidirectional_element_accessible_modifiable<T, Iterator>,
+	                                             public random_element_accessible<T>,
+	                                             public virtual iterable<Iterator> {
 	public:
 		typedef T value_type;
 		typedef Iterator iterator;
@@ -39,12 +42,13 @@ namespace ctl {
 		inline virtual iterator insert(size_type idx, std::initializer_list<value_type> il) = 0; // stl
 
 		using bidirectional_element_accessible_modifiable<value_type, iterator>::remove_all;
-		inline virtual void remove_all(size_type first, size_type last, const_reference item) {
+		inline void remove_all(size_type first, size_type last, const_reference item) {
 			remove_all(this->begin() + first, this->begin() + last, item);
 		} // qt
-		inline virtual void remove_all(size_type first, size_type last, conformer predicate) {
+		inline void remove_all(size_type first, size_type last, conformer predicate) {
 			remove_all(this->begin() + first, this->begin() + last, predicate);
 		} // qt
+		inline void remove_at(size_type idx) { erase(idx); } // qt
 	};
 }
 
