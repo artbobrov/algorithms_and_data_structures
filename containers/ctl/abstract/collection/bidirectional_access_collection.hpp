@@ -37,7 +37,7 @@ namespace ctl {
 	public:
 		inline allocator_type allocator() const noexcept { return _allocator; } // stl
 
-		inline size_type iterator_of(const_reference value, iterator first, iterator last) const; // qt
+		inline iterator iterator_of(const_reference value, iterator first, iterator last) const; // qt
 
 		inline void reverse() { reverse(this->begin(), this->end()); } // c#
 		inline void reverse(iterator first, iterator last); // c#
@@ -46,7 +46,7 @@ namespace ctl {
 		allocator_type _allocator;
 	};
 	template<class T, class Iterator, class Allocator>
-	typename bidirectional_access_collection<T, Iterator, Allocator>::size_type
+	typename bidirectional_access_collection<T, Iterator, Allocator>::iterator
 	bidirectional_access_collection<T, Iterator, Allocator>::iterator_of(const T &value,
 	                                                                     Iterator first,
 	                                                                     Iterator last) const {

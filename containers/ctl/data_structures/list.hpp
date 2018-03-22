@@ -1,7 +1,188 @@
 //
 // Created by Artem Bobrov on 20.03.2018.
 //
+/*
+namespace ctl {
 
+	template<class T, class Allocator = std::allocator<T>>
+	class list {
+	public: // typedefs
+		typedef Allocator allocator_type;
+		typedef T value_type;
+		typedef __list_iterator<T> iterator;
+		typedef const iterator const_iterator;
+		typedef std::reverse_iterator<iterator> reverse_iterator;
+		typedef const std::reverse_iterator<iterator> const_reverse_iterator;
+		typedef T *pointer;
+		typedef value_type &reference;
+		typedef value_type const &const_reference;
+		typedef size_t size_type;
+		typedef std::ptrdiff_t difference_type;
+
+		typedef std::function<bool(const_reference)> conformer;
+		typedef std::function<void(reference)> action;
+		typedef std::function<bool(const_reference, const_reference)> comparer;
+
+		typedef __node<T> node;
+		typedef node *node_point;
+	public: // constructors & destructors
+		explicit list(const Allocator &alloc = Allocator());
+
+		explicit list(size_type count, const Allocator &alloc = Allocator());
+		explicit list(size_type count, const_reference value, const Allocator &alloc = Allocator());
+
+		template<class Iterator>
+		explicit list(Iterator begin, Iterator end, const Allocator &alloc = Allocator(),
+		                     typename std::enable_if<is_forward_iterator<Iterator>::value>::type * = 0);
+
+		list(const list<value_type, allocator_type> &other);
+
+		list(const list<value_type, allocator_type> &other, const Allocator &alloc);
+
+		list(list &&other) noexcept;
+
+		template<class Container, typename =
+		typename std::enable_if<has_begin_end<Container>::value && !std::is_convertible<Container, list>::value>::type>
+		list(const Container &__container);
+
+		list(std::initializer_list<value_type> il, const Allocator &alloc = Allocator());
+
+		virtual ~list();
+	public: // operators
+		list &operator=(const list &other);
+		list &operator=(list &&other) noexcept;
+
+		explicit operator std::string() const noexcept;
+	public:
+		template<typename R>
+		R accumulate(R initial, std::function<R(R, const_reference)> next_result);
+		allocator_type allocator() const noexcept;
+		void append(element_accessible_modifiable<value_type, iterator> &other);
+		void append(const_reference value);
+		void append(value_type &&value);
+
+		reference back();
+		const_reference back() const;
+		iterator begin() noexcept;
+		const_iterator begin() const noexcept;
+		const_iterator cbegin() const noexcept;
+		const_iterator cend() const noexcept;
+		void clear() noexcept;
+		bool contains(const_reference item) const;
+		bool contains(conformer predicate) const;
+		size_type count(const_reference item) const noexcept;
+		size_type count(conformer predicate) const noexcept;
+
+		const_reverse_iterator crbegin() const noexcept;
+		const_reverse_iterator crend() const noexcept;
+
+		pointer data() noexcept;
+		pointer data() const noexcept;
+
+		template<class... Args>
+		reference emplace(const_iterator position, Args &&... args);
+		template<class... Args>
+		reference emplace(size_type idx, Args &&... args);
+		template<class... Args>
+		reference emplace_back(Args &&... args);
+		template<class... Args>
+		reference emplace_front(Args &&... args);
+		bool empty() const noexcept;
+		iterator end() noexcept;
+		const_iterator end() const noexcept;
+		iterator erase(const_iterator position);
+		iterator erase(const_iterator first, const_iterator last);
+
+		void fill(iterator first, iterator last, const T &value);
+		void fill(const T &value, size_type size);
+		void fill(const T &value);
+		void filter(conformer predicate);
+		list filtered(conformer predicate);
+		list<value_type, allocator_type> filtered(conformer predicate);
+		iterator first(conformer predicate) const noexcept;
+		iterator first(const_reference item) const;
+		void for_each(action act) noexcept;
+		reference front();
+		const_reference front() const;
+
+		iterator insert(const_iterator position, const_reference value);
+		iterator insert(const_iterator position, value_type &&value);
+		iterator insert(const_iterator position, size_type count, const_reference value);
+		iterator insert(const_iterator position, std::initializer_list<value_type> il);
+		template<class Iterator>
+		iterator insert(const_iterator position, Iterator first, Iterator last);
+		iterator iterator_of(const_reference value, iterator first, iterator last) const;
+
+		template<typename U>
+		list<U, allocator_type> map(std::function<U(reference)> mapper);
+		iterator max() const;
+		iterator max(comparer comp) const;
+		size_type max_size() const noexcept;
+		iterator min() const;
+		iterator min(comparer comp) const;
+
+		void pop_back();
+		void pop_back(size_type count);
+		void pop_front();
+		void pop_front(size_type count);
+		list<value_type, allocator_type> prefix(size_type max_length);
+		list<value_type, allocator_type> prefix(conformer predicate);
+		void push_back(const_reference value);
+		void push_back(size_type count, const_reference value);
+		void push_back(value_type &&value);
+		void push_front(const_reference value);
+		void push_front(value_type &&value);
+		void push_front(size_type count, const_reference value);
+
+		reverse_iterator rbegin() noexcept;
+		const_reverse_iterator rbegin() const noexcept;
+		void remove(const_reference item);
+		void remove_all(const_reference item);
+		void remove_all(iterator first, iterator last, const_reference item);
+		void remove_all(conformer predicate);
+		void remove_all(iterator first, iterator last, conformer predicate);
+		void remove_first();
+		void remove_last();
+		reverse_iterator rend() noexcept;
+		const_reverse_iterator rend() const noexcept;
+		void resize(size_type count);
+		void resize(size_type count, const value_type &value);
+		void reverse();
+		void reverse(iterator first, iterator last);
+
+		size_type size() const noexcept;
+		list<value_type, allocator_type> subsequence(iterator from, iterator to);
+		list<value_type, allocator_type> suffix(size_type max_length);
+		list<value_type, allocator_type> suffix(conformer predicate);
+		void swap(list<value_type, allocator_type> &other);
+
+		std::vector<value_type> to_std_vector() const;
+		std::list<value_type> to_std_list() const;
+		std::set<value_type> to_std_set() const;
+		bool true_for_all(conformer conform) const;
+	};
+
+	//! Non member functions
+
+	template<class T, class Allocator>
+	bool operator==(const list<T, Allocator> &lhs, const list<T, Allocator> &rhs);
+
+	template<class T, class Allocator>
+	bool operator!=(const list<T, Allocator> &lhs, const list<T, Allocator> &rhs);
+
+	template<class T, class Allocator>
+	bool operator<(const list<T, Allocator> &lhs, const list<T, Allocator> &rhs);
+
+	template<class T, class Allocator>
+	bool operator>(const list<T, Allocator> &lhs, const list<T, Allocator> &rhs);
+
+	template<class T, class Allocator>
+	bool operator<=(const list<T, Allocator> &lhs, const list<T, Allocator> &rhs);
+
+	template<class T, class Allocator>
+	bool operator>=(const list<T, Allocator> &lhs, const list<T, Allocator> &rhs);
+}
+*/
 #ifndef CONTAINERS_LIST_HPP
 #define CONTAINERS_LIST_HPP
 
@@ -165,6 +346,10 @@ namespace ctl {
 			list(il.begin(), il.end(), alloc) {}
 
 		inline virtual ~list() { clear(); }
+	public: // operators
+		list &operator=(const list &other);
+		list &operator=(list &&other) noexcept;
+
 	public:
 		inline void append(bidirectional_element_accessible_modifiable<value_type, iterator> &value) override;
 
@@ -203,6 +388,9 @@ namespace ctl {
 		inline iterator insert(const_iterator position, std::initializer_list<value_type> il) override;
 		template<class Iterator, typename = typename std::enable_if<is_forward_iterator<Iterator>::value>::type>
 		inline iterator insert(const_iterator position, Iterator first, Iterator last);
+
+		template<typename U>
+		inline list<U, allocator_type> map(std::function<U(reference)> mapper);
 
 		inline void pop_back() override;
 		inline void pop_back(size_type count) override;
@@ -318,6 +506,23 @@ namespace ctl {
 		_size = other._size;
 		other._head.data_point = other._tail.data_point = nullptr;
 		other._size = 0;
+	}
+	template<class T, class Allocator>
+	list<T, Allocator> &list<T, Allocator>::operator=(const list &other) {
+		if (this != &other) {
+			list(other).swap(*this);
+		}
+		return *this;
+	}
+	template<class T, class Allocator>
+	list<T, Allocator> &list<T, Allocator>::operator=(list &&other) noexcept {
+		_head = other._head;
+		_tail = other._tail;
+		_size = other._size;
+		other._head.data_point = other._tail.data_point = nullptr;
+		other._size = 0;
+
+		return *this;
 	}
 
 	template<class T, class Allocator>
@@ -463,7 +668,6 @@ namespace ctl {
 	typename list<T, Allocator>::iterator list<T, Allocator>::insert(const_iterator position,
 	                                                                 Iterator first,
 	                                                                 Iterator last) {
-		// TODO: fix return type
 		iterator result = position;
 		iterator pos = position;
 		for (Iterator it = first; it != last; ++it, ++pos) {
@@ -473,6 +677,17 @@ namespace ctl {
 		}
 		return result;
 	}
+	template<class T, class Allocator>
+	template<typename U>
+	list<U, Allocator> list<T, Allocator>::map(std::function<U(reference)> mapper) {
+		list<U, allocator_type> other(size(), this->allocator());
+		iterator first = begin();
+		for (typename list<U, allocator_type>::iterator it = other.begin(); it != other.end() && first != end();
+		     ++it, ++first)
+			*it = mapper(*first);
+		return other;
+	}
+
 	template<class T, class Allocator>
 	void list<T, Allocator>::pop_back() {
 		if (size() > 0) {
