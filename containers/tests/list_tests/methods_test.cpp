@@ -36,7 +36,7 @@ public:
 	}
 
 	size_t get_size(size_t max_size) {
-		std::uniform_int_distribution<size_t> uid(1, static_cast<int>(max_size));
+		std::uniform_int_distribution<size_t> uid(2, static_cast<int>(max_size));
 		return uid(generator) - 1;
 	}
 
@@ -65,11 +65,9 @@ protected:
 		generator = std::default_random_engine(time(0));
 		stdlst = new std::list<int>();
 		ctllst = new ctl::list<int>();
-		size_t size = get_size(1000000);
+		size_t size = get_size(10000);
 		this->fill(size);
 	}
-private:
-
 public:
 
 	std::list<int> *stdlst;
@@ -125,9 +123,18 @@ TEST_F(list_test_fixture, count) {
 }
 
 TEST_F(list_test_fixture, emplace) {
-	auto value = get_value();
+	auto value = this->get_value();
 	auto size = ctllst->size();
 	auto offset = this->get_size(size);
+	ctllst->emplace(iterator_with_offset(ctllst->begin(), offset), value);
+	stdlst->emplace(iterator_with_offset(stdlst->begin(), offset), value);
+
+	ASSERT_EQ(size + 1, ctllst->size());
+	ASSERT_EQ(*ctllst, *stdlst);
+
+	value = this->get_value();
+	size = ctllst->size();
+	offset = size;
 	ctllst->emplace(iterator_with_offset(ctllst->begin(), offset), value);
 	stdlst->emplace(iterator_with_offset(stdlst->begin(), offset), value);
 
@@ -145,11 +152,12 @@ TEST_F(list_test_fixture, emplace_back) {
 }
 
 TEST_F(list_test_fixture, erase) {
-	ASSERT_EQ(*ctllst, *stdlst);
 	auto idx = this->get_size(ctllst->size());
 	ctllst->erase(iterator_with_offset(ctllst->begin(), idx));
 	stdlst->erase(iterator_with_offset(stdlst->begin(), idx));
-	ASSERT_EQ(*ctllst, *stdlst);
+
+	ASSERT_EQ(*stdlst, *ctllst);
+
 	idx = this->get_size(ctllst->size());
 	auto difference = this->get_size(ctllst->size() - idx);
 	ctllst->erase(iterator_with_offset(ctllst->begin(), idx),
@@ -178,19 +186,26 @@ TEST_F(list_test_fixture, fill) {
 
 TEST_F(list_test_fixture, filter) {
 	ctllst->filter([](auto &value) { return value % 2 == 0; });
-
 	ASSERT_TRUE(ctllst->true_for_all([](auto &value) { return value % 2 == 0; }));
 	ASSERT_EQ(ctllst->size(), ctllst->count([](auto &value) { return value % 2 == 0; }));
 }
 
+bool is_square(int value) {
+	return sqrt(value) * sqrt(value) == value;
+}
+
 TEST_F(list_test_fixture, first) {
-	const auto value = this->get_value() + 1;
+	const auto value = this->get_value();
 
 	ASSERT_EQ(ctl::distance(stdlst->begin(), std::find(stdlst->begin(), stdlst->end(), value)),
 	          ctl::distance(ctllst->begin(), ctllst->first(value)));
-	auto cfirst = ctllst->first([&value](auto &element)->bool { return element % value == 0; });
+
+	auto cfirst = ctllst->first([&value](auto &element)->bool { return is_square(element); });
 	auto
-		sfirst = std::find_if(stdlst->begin(), stdlst->end(), [&value](auto &element) { return element % value == 0; });
+		sfirst = std::find_if(stdlst->begin(), stdlst->end(), [&value](auto &element) { return is_square(element); });
+
+	if (cfirst == ctllst->end() && sfirst == stdlst->end())
+		return;
 
 	ASSERT_EQ(*cfirst, *sfirst);
 	ASSERT_EQ(std::distance(stdlst->begin(), sfirst), std::distance(ctllst->begin(), cfirst));
@@ -252,7 +267,7 @@ TEST_F(list_test_fixture, pop_back) {
 
 TEST_F(list_test_fixture, pop_front) {
 	ctllst->pop_front();
-	stdlst->erase(stdlst->begin());
+	stdlst->pop_front();
 	ASSERT_EQ(*ctllst, *stdlst);
 	auto size = this->get_size(std::min(this->get_size(100), ctllst->size()));
 	ctllst->pop_front(size);

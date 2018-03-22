@@ -131,6 +131,8 @@ namespace ctl {
 		template<class... Args>
 		inline node_point _new_node(Args &&...args);
 		inline void _delete_node(node_point point);
+		template<class... Args>
+		inline void _construct_at(node_point node, Args &&...args);
 	public:
 		inline explicit list(const Allocator &alloc = Allocator())
 			: list::bidirectional_access_collection(alloc), _head(_new_node()), _tail(_head), _size(0) {
@@ -180,6 +182,8 @@ namespace ctl {
 		inline reference emplace(const_iterator position, Args &&... args);
 		template<class... Args>
 		inline reference emplace_back(Args &&... args);
+		template<class... Args>
+		inline reference emplace_front(Args &&... args);
 		inline iterator end() noexcept override { return _tail; }
 		inline const_iterator end() const noexcept override { return _tail; }
 		inline iterator erase(const_iterator position) override;
@@ -189,10 +193,9 @@ namespace ctl {
 		inline void fill(iterator first, iterator last, const_reference value) override;
 		inline void fill(const_reference value, size_type size) override;
 		inline void filter(conformer predicate) override;
+		inline list filtered(conformer predicate);
 		inline reference front() override { return *_head; }
 		inline const_reference front() const override { return *_head; }
-
-		inline size_type size() const noexcept override { return _size; }
 
 		inline iterator insert(const_iterator position, const_reference value) override;
 		inline iterator insert(const_iterator position, value_type &&value) override;
@@ -211,13 +214,20 @@ namespace ctl {
 		inline void push_front(const_reference value) override;
 		inline void push_front(value_type &&value) override;
 		inline void push_front(size_type count, const_reference value) override;
+		inline list prefix(size_type max_length);
+		inline list prefix(conformer predicate);
+
 		using bidirectional_element_accessible_modifiable<value_type, iterator>::remove_all;
 		inline void remove_all(iterator first, iterator last, const_reference item) override;
 		inline void remove_all(iterator first, iterator last, conformer predicate) override;
 		inline void remove(const_reference item) override;
 		inline void resize(size_type count) override;
 		inline void resize(size_type count, const value_type &value) override;
+		inline list reversed();
 
+		inline list suffix(size_type max_length);
+		inline list suffix(conformer predicate);
+		inline size_type size() const noexcept override { return _size; }
 		inline list<value_type, allocator_type> subsequence(iterator from, iterator to);
 		inline void swap(list<value_type, allocator_type> &other);
 	};
@@ -275,7 +285,9 @@ namespace ctl {
 	template<class... Args>
 	typename list<T, Allocator>::node_point list<T, Allocator>::_new_node(Args &&...args) {
 		node_point new_node = this->_allocator.allocate(1);
+		_construct_at(new_node, std::forward<Args>(args)...);
 		new_node->prev = new_node->next = nullptr;
+
 		return new_node;
 	}
 	template<class T, class Allocator>
@@ -283,6 +295,12 @@ namespace ctl {
 		this->_allocator.destroy(point);
 		this->_allocator.deallocate(point, 1);
 	}
+	template<class T, class Allocator>
+	template<class... Args>
+	void list<T, Allocator>::_construct_at(node_point node, Args &&... args) {
+		this->_allocator.construct(&(node->data), std::forward<Args>(args)...);
+	}
+
 	template<class T, class Allocator>
 	template<class Iterator>
 	list<T, Allocator>::list(Iterator begin,
@@ -315,12 +333,17 @@ namespace ctl {
 	template<class T, class Allocator>
 	void list<T, Allocator>::filter(conformer predicate) {
 		iterator result = begin();
-		for (iterator first = begin(); first != end(); ++first)
-			if (predicate(*first))
-				*result++ = *first;
-
-		for (; _tail != result; --_tail)
-			_delete_node(_tail.data_point);
+		for (iterator first = begin(); first != end();) {
+			iterator tmp = first++;
+			if (!predicate(*tmp))
+				erase(tmp);
+		}
+	}
+	template<class T, class Allocator>
+	list<T, Allocator> list<T, Allocator>::filtered(conformer predicate) {
+		list other(*this);
+		other.filter(predicate);
+		return other;
 	}
 
 	template<class T, class Allocator>
@@ -331,11 +354,15 @@ namespace ctl {
 	template<class T, class Allocator>
 	template<class... Args>
 	typename list<T, Allocator>::reference list<T, Allocator>::emplace(const_iterator position, Args &&... args) {
+		if (position == this->begin())
+			return emplace_front(std::forward<Args>(args)...);
+		else if (position == this->end())
+			return emplace_back(std::forward<Args>(args)...);
 		node_point new_node = _new_node(std::forward<Args>(args)...);
-		position.data_point->prev->next = new_node;
-		new_node->prev = position.data_point->prev;
-		position.data_point->prev = new_node;
 		new_node->next = position.data_point;
+		new_node->prev = position.data_point->prev;
+		position.data_point->prev->next = new_node;
+		position.data_point->prev = new_node;
 		++_size;
 		return new_node->data;
 	}
@@ -343,15 +370,33 @@ namespace ctl {
 	template<class... Args>
 	typename list<T, Allocator>::reference list<T, Allocator>::emplace_back(Args &&... args) {
 		node_point new_tail = _new_node();
-		this->_allocator.construct(&(_tail.data_point->data), std::forward<Args>(args)...);
-		_tail.data_point->next = new_tail;
+		_construct_at(_tail.data_point, std::forward<Args>(args)...);
 		new_tail->prev = _tail.data_point;
+		_tail.data_point->next = new_tail;
 		_tail.data_point = new_tail;
 		++_size;
-		return back();
+		return new_tail->data;
+	}
+	template<class T, class Allocator>
+	template<class... Args>
+	typename list<T, Allocator>::reference list<T, Allocator>::emplace_front(Args &&... args) {
+		node_point new_head = _new_node(std::forward<Args>(args)...);
+		new_head->next = _head.data_point;
+		_head.data_point->prev = new_head;
+		_head.data_point = new_head;
+		++_size;
+		return new_head->data;
 	}
 	template<class T, class Allocator>
 	typename list<T, Allocator>::iterator list<T, Allocator>::erase(const_iterator position) {
+		if (position == this->begin()) {
+			pop_front();
+			return begin();
+		} else if (position == this->end()) {
+			pop_back();
+			return end();
+		}
+
 		node_point deleted_node = position.data_point;
 
 		deleted_node->next->prev = deleted_node->prev;
@@ -364,17 +409,23 @@ namespace ctl {
 	}
 	template<class T, class Allocator>
 	typename list<T, Allocator>::iterator list<T, Allocator>::erase(const_iterator first, const_iterator last) {
-		first.data_point->prev->next = last.data_point->next;
-		last.data_point->next->prev = first.data_point->prev;
-
-		node_point result = last.data_point->next;
-		for (; first != last; ++first, --_size)
-			_delete_node(first.data_point);
-
-		return iterator(result);
+		iterator result;
+		for (; first != last;) {
+			iterator tmp = first++;
+			result = erase(tmp);
+		}
+		return result;
 	}
 	template<class T, class Allocator>
 	typename list<T, Allocator>::iterator list<T, Allocator>::insert(const_iterator position, const_reference value) {
+		if (position == this->begin()) {
+			push_front(value);
+			return this->begin();
+		} else if (position == this->end()) {
+			push_back(value);
+			return this->end();
+		}
+
 		node_point new_node = _new_node(value);
 		position.data_point->prev->next = new_node;
 		new_node->prev = position.data_point->prev;
@@ -424,11 +475,13 @@ namespace ctl {
 	}
 	template<class T, class Allocator>
 	void list<T, Allocator>::pop_back() {
-		node_point deleted_node = _tail.data_point->prev;
-		_tail.data_point->prev = deleted_node->prev;
-		_tail.data_point->prev->next = _tail.data_point;
-		_delete_node(deleted_node);
-		--_size;
+		if (size() > 0) {
+			node_point deleted_node = _tail.data_point->prev;
+			_tail.data_point->prev = deleted_node->prev;
+			_tail.data_point->prev->next = _tail.data_point;
+			_delete_node(deleted_node);
+			--_size;
+		}
 	}
 	template<class T, class Allocator>
 	void list<T, Allocator>::pop_back(size_type count) {
@@ -437,10 +490,13 @@ namespace ctl {
 	}
 	template<class T, class Allocator>
 	void list<T, Allocator>::pop_front() {
-		//		_head.data_point = _head.data_point->next;
-		//		_delete_node(_head.data_point->prev);
-		_delete_node(_head++.data_point->prev);
-		--_size;
+		if (size() > 0) {
+			auto oldNode = _head.data_point;
+			_head.data_point = oldNode->next;
+			_head.data_point->prev = nullptr;
+			_delete_node(oldNode);
+			--_size;
+		}
 	}
 	template<class T, class Allocator>
 	void list<T, Allocator>::pop_front(size_type count) {
@@ -492,6 +548,19 @@ namespace ctl {
 			push_front(value);
 	}
 	template<class T, class Allocator>
+	list<T, Allocator> list<T, Allocator>::prefix(size_type max_length) {
+		size_type _length = std::min(max_length, size());
+		iterator last = this->begin();
+		for (; _length > 0; --_length, ++last);
+		return list(this->begin(), last, this->allocator());
+	}
+	template<class T, class Allocator>
+	list<T, Allocator> list<T, Allocator>::prefix(conformer predicate) {
+		iterator last = begin();
+		for (; last != end() && predicate(*last); ++last) {}
+		return list(begin(), last, this->allocator());
+	}
+	template<class T, class Allocator>
 	void list<T, Allocator>::remove_all(iterator first, iterator last, const_reference item) {
 		iterator result = first;
 		for (; first != last; ++first)
@@ -533,6 +602,11 @@ namespace ctl {
 			pop_back(diff);
 	}
 	template<class T, class Allocator>
+	list<T, Allocator> list<T, Allocator>::reversed() {
+		return list(this->rbegin(), this->rend(), this->allocator());
+	}
+
+	template<class T, class Allocator>
 	void list<T, Allocator>::clear() noexcept {
 		if (!this->empty()) {
 			node_point begin = _head.data_point, end = _tail.data_point;
@@ -545,6 +619,19 @@ namespace ctl {
 				_delete_node(deleted_node);
 			}
 		}
+	}
+	template<class T, class Allocator>
+	list<T, Allocator> list<T, Allocator>::suffix(conformer predicate) {
+		iterator first = end();
+		for (; first != begin() && predicate(*first); --first) {}
+		return list(first, end(), this->allocator());
+	}
+	template<class T, class Allocator>
+	list<T, Allocator> list<T, Allocator>::suffix(size_type max_length) {
+		size_type _size = std::min(max_length, size());
+		iterator last = this->end();
+		for (; _size > 0; --_size, --last) {}
+		return list(last, this->end(), this->allocator());
 	}
 	template<class T, class Allocator>
 	list<T, Allocator> list<T, Allocator>::subsequence(iterator from, iterator to) {

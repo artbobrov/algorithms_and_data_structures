@@ -216,8 +216,6 @@ namespace ctl {
 
 
 	public:
-		template<typename R>
-		inline R accumulate(R initial, R (*next_result)(R, const_reference));
 		inline void append(bidirectional_element_accessible_modifiable<value_type, iterator> &other) override;
 		inline reference at(size_type i) override;
 		inline const_reference at(size_type i) const override;
@@ -296,8 +294,8 @@ namespace ctl {
 		inline void push_front(const_reference value) override;
 		inline void push_front(value_type &&value) override;
 		inline void push_front(size_type count, const_reference value) override;
-		inline vector<value_type, allocator_type> prefix(size_type max_length);
-		inline vector<value_type, allocator_type> prefix(conformer predicate);
+		inline vector prefix(size_type max_length);
+		inline vector prefix(conformer predicate);
 
 		inline void reserve(size_type n) override;
 		using random_element_accessible_modifiable<value_type, iterator>::remove_all;
@@ -308,8 +306,8 @@ namespace ctl {
 		inline void resize(size_type n, const value_type &value) override;
 		inline vector reversed();
 
-		inline vector<value_type, allocator_type> subsequence(iterator from, iterator to);
-		inline vector<value_type, allocator_type> subsequence(size_type from, size_type to) {
+		inline vector subsequence(iterator from, iterator to);
+		inline vector subsequence(size_type from, size_type to) {
 			return subsequence(begin() + from, begin() + to);
 		}
 
@@ -846,18 +844,9 @@ namespace ctl {
 	}
 	template<class T, class Allocator>
 	vector<T, Allocator> vector<T, Allocator>::reversed() {
-		vector<value_type, allocator_type> other(*this);
-		other.reverse();
-		return other;
+		return vector(this->rbegin(), this->rend(), this->allocator());
 	}
-	template<class T, class Allocator>
-	template<typename R>
-	R vector<T, Allocator>::accumulate(R initial, R (*next_result)(R, const_reference)) {
-		for (iterator it = begin(); it != end(); ++it)
-			initial = next_result(initial, *it);
 
-		return initial;
-	}
 	template<class T, class Allocator>
 	vector<T, Allocator> vector<T, Allocator>::subsequence(iterator from, iterator to) {
 		return vector(from, to, this->allocator());
