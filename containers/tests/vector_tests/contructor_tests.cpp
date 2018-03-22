@@ -7,19 +7,10 @@
 
 #include <thread>
 
-#include "extra_functions.hpp"
+#include "../extra/extra_functions.hpp"
+#include "../extra/generator.hpp"
 
-std::default_random_engine gen(static_cast<unsigned int>(time(0)));
-size_t get_size(size_t max_size = 1000) {
-	std::uniform_int_distribution<> uid(0, 1000);
-	return static_cast<size_t>(uid(gen));
-}
-
-int get_value() {
-	std::mt19937 gen(static_cast<unsigned int>(time(0)));
-	std::uniform_int_distribution<> uid(-100, 100);
-	return static_cast<int>(uid(gen));
-}
+generator vector_generator(static_cast<unsigned int>(time(0)));
 
 TEST(vector_contructor_test_suite, default) {
 	std::vector<int> svec;
@@ -28,21 +19,21 @@ TEST(vector_contructor_test_suite, default) {
 }
 
 TEST(vector_contructor_test_suite, default_value) {
-	size_t size = get_size();
-	int value = get_value();
+	size_t size = vector_generator.get_size();
+	int value = vector_generator.get_value();
 	std::vector<int> svec(size, value);
 	ctl::vector<int> cvec(size, value);
 	ASSERT_EQ(cvec, svec);
 }
 
 TEST(vector_contructor_test_suite, template) {
-	size_t size = get_size();
+	size_t size = vector_generator.get_size();
 
 	std::vector<int> std_tmp_vector(size);
 	std::list<int> std_tmp_list;
 
 	for (size_t i = 0; i < size; ++i) {
-		int value = get_value();
+		int value = vector_generator.get_value();
 		std_tmp_vector[i] = value;
 		std_tmp_list.push_back(value);
 	}
@@ -56,12 +47,12 @@ TEST(vector_contructor_test_suite, template) {
 	ASSERT_EQ(cvec_l, std_tmp_vector);
 }
 TEST(vector_contructor_test_suite, copy) {
-	size_t size = get_size();
+	size_t size = vector_generator.get_size();
 
 	ctl::vector<int> cvector(size);
 
 	for (size_t i = 0; i < size; ++i) {
-		int value = get_value();
+		int value = vector_generator.get_value();
 		cvector[i] = value;
 	}
 	ctl::vector<int> copy_ctl_vector(cvector);
@@ -69,7 +60,7 @@ TEST(vector_contructor_test_suite, copy) {
 	ASSERT_EQ(cvector, copy_ctl_vector);
 }
 TEST(vector_contructor_test_suite, copy_from_stl) {
-	size_t size = get_size();
+	size_t size = vector_generator.get_size();
 
 	std::vector<int> svector;
 	std::list<int> slist;
@@ -77,7 +68,7 @@ TEST(vector_contructor_test_suite, copy_from_stl) {
 	std::map<int, int> smap;
 
 	for (size_t i = 0; i < size; ++i) {
-		int value = get_value();
+		int value = vector_generator.get_value();
 
 		svector.push_back(value);
 		slist.push_back(value);
@@ -107,12 +98,12 @@ TEST(vector_contructor_test_suite, copy_from_stl) {
 }
 
 TEST(vector_contructor_test_suite, move) {
-	size_t size = get_size();
+	size_t size = vector_generator.get_size();
 
 	ctl::vector<int> ctl_vector(size);
 
 	for (size_t i = 0; i < size; ++i) {
-		int value = get_value();
+		int value = vector_generator.get_value();
 		ctl_vector[i] = value;
 	}
 

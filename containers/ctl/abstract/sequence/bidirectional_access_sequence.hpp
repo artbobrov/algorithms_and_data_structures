@@ -30,6 +30,11 @@ namespace ctl {
 		typedef std::function<void(reference)> action;
 		typedef std::function<bool(const_reference, const_reference)> comparer;
 	public:
+		explicit operator std::string() const noexcept override;
+	public:
+		template<typename R>
+		inline R accumulate(R initial, R (*next_result)(R, const_reference));
+
 		inline bool contains(const_reference item) const; // qt
 		inline bool contains(conformer predicate) const; // qt
 
@@ -59,6 +64,23 @@ namespace ctl {
 		inline virtual std::set<value_type> to_std_set() const; // c#
 	};
 	template<class T, class Iterator>
+	bidirectional_access_sequence<T, Iterator>::operator std::string() const noexcept {
+		using std::to_string;
+		std::string output;
+		for (const_reference element: *this)
+			output += to_string(element) + ' ';
+		return output;
+	}
+	template<class T, class Iterator>
+	template<typename R>
+	R bidirectional_access_sequence<T, Iterator>::accumulate(R initial, R (*next_result)(R, const_reference)) {
+		for (iterator it = this->begin(); it != this->end(); ++it)
+			initial = next_result(initial, *it);
+
+		return initial;
+	}
+
+	template<class T, class Iterator>
 	bool bidirectional_access_sequence<T, Iterator>::contains(const_reference item) const {
 		for (const_reference element: *this)
 			if (element == item)
@@ -73,7 +95,8 @@ namespace ctl {
 		return false;
 	}
 	template<class T, class Iterator>
-	typename bidirectional_access_sequence<T, Iterator>::difference_type bidirectional_access_sequence<T, Iterator>::count(
+	typename bidirectional_access_sequence<T, Iterator>::difference_type bidirectional_access_sequence<T,
+	                                                                                                   Iterator>::count(
 		const_reference item) const noexcept {
 		difference_type _count = 0;
 		for (const_reference element: *this)
@@ -84,7 +107,8 @@ namespace ctl {
 	}
 	template<class T, class Iterator>
 	typename bidirectional_access_sequence<T, Iterator>::difference_type bidirectional_access_sequence<T,
-	                                                                                     Iterator>::count(conformer predicate) const noexcept {
+	                                                                                                   Iterator>::count(
+		conformer predicate) const noexcept {
 		difference_type _count = 0;
 		for (const_reference element: *this)
 			if (predicate(element))
@@ -100,14 +124,16 @@ namespace ctl {
 
 	template<class T, class Iterator>
 	typename bidirectional_access_sequence<T, Iterator>::iterator bidirectional_access_sequence<T,
-	                                                                              Iterator>::first(conformer predicate) const noexcept {
+	                                                                                            Iterator>::first(
+		conformer predicate) const noexcept {
 		iterator _first = this->begin();
 		for (; _first != this->end() && !predicate(*_first); ++_first) {}
 		return _first;
 	}
 	template<class T, class Iterator>
 	typename bidirectional_access_sequence<T, Iterator>::iterator bidirectional_access_sequence<T,
-	                                                                              Iterator>::first(const_reference item) const noexcept {
+	                                                                                            Iterator>::first(
+		const_reference item) const noexcept {
 		iterator _first = this->begin();
 		for (; _first != this->end() && *_first != item; ++_first) {}
 		return _first;
@@ -121,8 +147,10 @@ namespace ctl {
 
 	template<class T, class Iterator>
 	template<typename>
-	typename bidirectional_access_sequence<T, Iterator>::bidirectional_access_sequence::iterator bidirectional_access_sequence<T,
-	                                                                                                      Iterator>::min() const {
+	typename bidirectional_access_sequence<T,
+	                                       Iterator>::bidirectional_access_sequence::iterator bidirectional_access_sequence<
+		T,
+		Iterator>::min() const {
 		iterator _min_value = this->begin();
 		for (iterator _it = this->begin(); _it != this->end(); ++_it)
 			if (*_it < *_min_value)
@@ -131,7 +159,7 @@ namespace ctl {
 	}
 	template<class T, class Iterator>
 	typename bidirectional_access_sequence<T, Iterator>::iterator bidirectional_access_sequence<T,
-	                                                                              Iterator>::min(comparer comp) const {
+	                                                                                            Iterator>::min(comparer comp) const {
 		iterator _min_value = this->begin();
 		for (iterator _it = this->begin(); _it != this->end(); ++_it)
 			if (comp(*_it, *_min_value))
@@ -140,7 +168,8 @@ namespace ctl {
 	}
 	template<class T, class Iterator>
 	template<typename>
-	typename bidirectional_access_sequence<T, Iterator>::iterator bidirectional_access_sequence<T, Iterator>::max() const {
+	typename bidirectional_access_sequence<T, Iterator>::iterator bidirectional_access_sequence<T,
+	                                                                                            Iterator>::max() const {
 		iterator _max_value = this->begin();
 		for (iterator _it = this->begin(); _it != this->end(); ++_it)
 			if (*_it > *_max_value)
@@ -150,7 +179,7 @@ namespace ctl {
 
 	template<class T, class Iterator>
 	typename bidirectional_access_sequence<T, Iterator>::iterator bidirectional_access_sequence<T,
-	                                                                              Iterator>::max(comparer comp) const {
+	                                                                                            Iterator>::max(comparer comp) const {
 		iterator _min_value = this->begin();
 		for (iterator _it = this->begin(); _it != this->end(); ++_it)
 			if (comp(*_min_value, *_it))
@@ -166,17 +195,17 @@ namespace ctl {
 	}
 	template<class T, class Iterator>
 	std::vector<typename bidirectional_access_sequence<T, Iterator>::value_type> bidirectional_access_sequence<T,
-	                                                                                             Iterator>::to_std_vector() const {
+	                                                                                                           Iterator>::to_std_vector() const {
 		return std::vector<value_type>(this->begin(), this->end());
 	}
 	template<class T, class Iterator>
 	std::list<typename bidirectional_access_sequence<T, Iterator>::value_type> bidirectional_access_sequence<T,
-	                                                                                           Iterator>::to_std_list() const {
+	                                                                                                         Iterator>::to_std_list() const {
 		return std::list<value_type>(this->begin(), this->end());
 	}
 	template<class T, class Iterator>
 	std::set<typename bidirectional_access_sequence<T, Iterator>::value_type> bidirectional_access_sequence<T,
-	                                                                                          Iterator>::to_std_set() const {
+	                                                                                                        Iterator>::to_std_set() const {
 		return std::set<value_type>(this->begin(), this->end());
 	}
 }
