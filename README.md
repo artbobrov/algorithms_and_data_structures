@@ -2,7 +2,7 @@
 
 #### Custom template library (ctl)
 
-My implemention of data structures:
+My implementation of data structures:
 
 * vector
 * list
