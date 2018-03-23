@@ -349,7 +349,6 @@ namespace ctl {
 	public: // operators
 		list &operator=(const list &other);
 		list &operator=(list &&other) noexcept;
-
 	public:
 		inline void append(bidirectional_element_accessible_modifiable<value_type, iterator> &value) override;
 
@@ -391,6 +390,8 @@ namespace ctl {
 
 		template<typename U>
 		inline list<U, allocator_type> map(std::function<U(reference)> mapper);
+		inline void merge(list &&other);
+		inline void merge(list &&other, comparer predicate);
 
 		inline void pop_back() override;
 		inline void pop_back(size_type count) override;
@@ -413,11 +414,19 @@ namespace ctl {
 		inline void resize(size_type count, const value_type &value) override;
 		inline list reversed();
 
+		inline void splice_back(list &&other);
+		inline void splice_front(list &&other);
+		inline void splice(const_iterator pos, list &&other);
+		inline void splice(const_iterator pos, list &&other, const_iterator it);
+		inline void splice(const_iterator pos, list &&other, const_iterator first, const_iterator last);
 		inline list suffix(size_type max_length);
 		inline list suffix(conformer predicate);
 		inline size_type size() const noexcept override { return _size; }
 		inline list<value_type, allocator_type> subsequence(iterator from, iterator to);
 		inline void swap(list<value_type, allocator_type> &other);
+
+		inline void unique();
+		inline void unique(comparer predicate);
 	};
 	/*
 	 * Non member functions: BEGIN
@@ -687,6 +696,19 @@ namespace ctl {
 			*it = mapper(*first);
 		return other;
 	}
+	template<class T, class Allocator>
+	void list<T, Allocator>::merge(list &&other) {
+		if (this != &other) {
+
+		}
+	}
+
+	template<class T, class Allocator>
+	void list<T, Allocator>::merge(list &&other, comparer predicate) {
+		if (this != &other) {
+
+		}
+	}
 
 	template<class T, class Allocator>
 	void list<T, Allocator>::pop_back() {
@@ -836,6 +858,73 @@ namespace ctl {
 		}
 	}
 	template<class T, class Allocator>
+	void list<T, Allocator>::splice_front(list &&other) {
+		if (!other.empty()) {
+			other.splice_back(std::move(*this));
+			swap(other);
+		}
+	}
+	template<class T, class Allocator>
+	void list<T, Allocator>::splice_back(list &&other) {
+		if (!other.empty()) {
+			_tail.data_point->prev->next = other._head.data_point;
+			other._head.data_point->prev = _tail.data_point->prev;
+			_tail.data_point = other._tail.data_point;
+			_size += other.size();
+			other._head.data_point = other._tail.data_point = nullptr;
+			other._size = 0;
+		}
+	}
+	template<class T, class Allocator>
+	void list<T, Allocator>::splice(const_iterator pos, list &&other) {
+		if (!other.empty()) {
+			if (pos == this->begin())
+				splice_front(std::move(other));
+			else if (pos == this->end())
+				splice_back(std::move(other));
+			else {
+				pos.data_point->prev->next = other._head.data_point;
+				other._head.data_point->prev = pos.data_point->prev;
+				other._tail.data_point->prev->next = pos.data_point;
+				pos.data_point->prev = other._tail.data_point->prev;
+				_size += other.size();
+
+				other._head.data_point = other._tail.data_point = nullptr;
+				other._size = 0;
+			}
+		}
+	}
+	template<class T, class Allocator>
+	void list<T, Allocator>::splice(const_iterator pos, list &&other, const_iterator it) {
+		iterator next = it;
+		splice(pos, std::move(other), it, ++next);
+	}
+	template<class T, class Allocator>
+	void list<T, Allocator>::splice(const_iterator pos, list &&other, const_iterator first, const_iterator last) {
+		if (first != last) {
+
+			if (first == other.begin()) {
+				other._head.data_point = last.data_point;
+				other._head.data_point->prev = nullptr;
+			} else {
+				first.data_point->prev->next = last.data_point;
+				last.data_point->prev = first.data_point->prev;
+			}
+
+			if (pos == this->begin()) {
+				_head.data_point->next->prev = last.data_point;
+				last.data_point->next = _head.data_point->next;
+
+				_head.data_point = first.data_point;
+				_head.data_point->prev = nullptr;
+			} else {
+				pos.data_point->prev->next = first.data_point;
+				first.data_point->prev = pos.data_point->prev;
+			}
+
+		}
+	}
+	template<class T, class Allocator>
 	list<T, Allocator> list<T, Allocator>::suffix(conformer predicate) {
 		iterator first = end();
 		for (; first != begin() && predicate(*first); --first) {}
@@ -859,6 +948,25 @@ namespace ctl {
 		swap(other._tail, _tail);
 		swap(other._head, _head);
 		swap(other._size, _size);
+	}
+	template<class T, class Allocator>
+	void list<T, Allocator>::unique() {
+		for (iterator first = this->begin(), last = this->end(); first != last;) {
+			iterator it = iterator(first.data_point->next);
+			for (; it != last && *first == *it; ++it);
+			if (++first != it)
+				first = erase(first, it);
+		}
+	}
+
+	template<class T, class Allocator>
+	void list<T, Allocator>::unique(comparer predicate) {
+		for (iterator first = this->begin(), last = this->end(); first != last;) {
+			iterator it = iterator(first.data_point->next);
+			for (; it != last && predicate(*first, *it); ++it);
+			if (++first != it)
+				first = erase(first, it);
+		}
 	}
 }
 

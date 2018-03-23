@@ -11,7 +11,6 @@
 #include <algorithm>
 #include <ostream>
 #include "../extra/generator.hpp"
-
 std::default_random_engine generator(static_cast<unsigned int>(time(0)));
 
 template<class Iterator>
@@ -47,7 +46,7 @@ public:
 
 	ctl::list<int> *get_random_list() {
 		ctl::list<int> *lst = new ctl::list<int>();
-		size_t size = get_size(10);
+		size_t size = get_size(1000);
 
 		for (int i = 0; i < size; ++i) {
 			auto value = get_value();
@@ -178,7 +177,7 @@ TEST_F(list_test_fixture, fill) {
 	ASSERT_EQ(ctllst->subsequence(iterator_with_offset(ctllst->begin(), idx),
 	                              iterator_with_offset(ctllst->begin(), idx + diff)).count(value), diff);
 	value = get_value();
-	auto size_diff = get_size(100);
+	auto size_diff = get_size(1000);
 	ctllst->fill(value, size_diff + ctllst->size());
 	ASSERT_EQ(ctllst->subsequence(iterator_with_offset(ctllst->end(), -size_diff), ctllst->end()).count(value),
 	          size_diff);
@@ -269,7 +268,7 @@ TEST_F(list_test_fixture, pop_front) {
 	ctllst->pop_front();
 	stdlst->pop_front();
 	ASSERT_EQ(*ctllst, *stdlst);
-	auto size = this->get_size(std::min(this->get_size(100), ctllst->size()));
+	auto size = this->get_size(std::min(this->get_size(1000), ctllst->size()));
 	ctllst->pop_front(size);
 	for (int i = 0; i < size; i++) { stdlst->erase(stdlst->begin()); }
 	ASSERT_EQ(*ctllst, *stdlst);
@@ -301,7 +300,60 @@ TEST_F(list_test_fixture, remove) {
 	ASSERT_EQ(cnt, 0);
 }
 
+TEST_F(list_test_fixture, splice_1) {
+	std::list<int> list1 = {1, 2, 3, 4, 5};
+	std::list<int> list2 = {10, 20, 30, 40, 50};
+	ctl::list<int> clist1 = {1, 2, 3, 4, 5};
+	ctl::list<int> clist2 = {10, 20, 30, 40, 50};
+
+	auto offset = this->get_size(list1.size());
+	auto it = iterator_with_offset(list1.begin(), offset);
+
+	auto cit = iterator_with_offset(clist1.begin(), offset);
+
+	list1.splice(it, list2);
+	clist1.splice(cit, std::move(clist2));
+
+	ASSERT_EQ(list1, clist1);
+}
+TEST_F(list_test_fixture, splice_2) {
+	std::list<int> list1 = {1, 2, 3, 4, 5};
+	std::list<int> list2 = {10, 20, 30, 40, 50};
+	ctl::list<int> clist1 = {1, 2, 3, 4, 5};
+	ctl::list<int> clist2 = {10, 20, 30, 40, 50};
+
+	auto offset = /*this->get_size(list1.size());*/2;
+	auto it = iterator_with_offset(list1.begin(), offset);
+	auto it_ = iterator_with_offset(list2.begin(), offset);
+	auto it_1 = iterator_with_offset(list2.begin(), offset + 2);
+
+	auto cit = iterator_with_offset(clist1.begin(), offset);
+	auto cit_ = iterator_with_offset(clist1.begin(), offset);
+	auto cit_1 = iterator_with_offset(clist1.begin(), offset + 2);
+
+	list1.splice(it, list2, it_, it_1);
+	clist1.splice(cit, std::move(clist2), cit_, cit_1);
+
+	ASSERT_EQ(list1, clist1);
+}
+
 TEST_F(list_test_fixture, true_for_all) {
 	auto flag = ctllst->true_for_all([](auto &value) { return value > 0; });
 	ASSERT_EQ(flag, ctllst->count([](auto &value) { return value > 0; }) == ctllst->size());
+}
+
+TEST_F(list_test_fixture, unique) {
+	ctl::list<int> clst = {1, 2, 2, 3, 3, 2, 1, 1, 2};
+	std::list<int> slst = {1, 2, 2, 3, 3, 2, 1, 1, 2};
+
+	clst.unique();
+	slst.unique();
+
+	ASSERT_EQ(clst, slst);
+
+	ctllst->unique();
+	stdlst->unique();
+
+	ASSERT_EQ(*ctllst, *stdlst);
+
 }
