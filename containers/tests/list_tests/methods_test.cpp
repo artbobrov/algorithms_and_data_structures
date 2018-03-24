@@ -65,12 +65,10 @@ protected:
 		generator = std::default_random_engine(time(0));
 		stdlst = new std::list<int>();
 		ctllst = new ctl::list<int>();
-//		size_t size = get_size(10000);
-		size_t size = 100000;
+		size_t size = get_size(10000);
 		this->fill(size);
 	}
 public:
-
 	std::list<int> *stdlst;
 	ctl::list<int> *ctllst;
 };
@@ -352,17 +350,16 @@ TEST_F(list_test_fixture, splice_2) {
 
 	ASSERT_EQ(list1, clist1);
 }
-TEST_F(list_test_fixture, sort) {
-	debug::profiler profiler;
-	profiler.start();
+TEST_F(list_test_fixture, sort_1) {
+	cout << endl;
 	stdlst->sort();
-	profiler.finish();
-	cout << "\nStd time: " << profiler.time() << endl;
-	profiler.clear();
-	profiler.start();
 	ctllst->sort();
-	profiler.finish();
-	cout << "Ctl time: " << profiler.time() << endl;
+	ASSERT_EQ(*stdlst, *ctllst);
+}
+TEST_F(list_test_fixture, sort_2) {
+	auto foo = [](auto &a, auto &b)->bool { return a < b; };
+	stdlst->sort(foo);
+	ctllst->sort(foo);
 	ASSERT_EQ(*stdlst, *ctllst);
 }
 

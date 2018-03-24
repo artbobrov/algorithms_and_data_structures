@@ -120,6 +120,8 @@ namespace ctl {
 		size_type max_size() const noexcept;
 		iterator min() const;
 		iterator min(comparer comp) const;
+		void merge(list &&other);
+		void merge(list &&other, comparer predicate);
 
 		void pop_back();
 		void pop_back(size_type count);
@@ -150,6 +152,13 @@ namespace ctl {
 		void reverse();
 		void reverse(iterator first, iterator last);
 
+		void sort();
+		void sort(comparer predicate);
+		void splice_back(list &&other);
+		void splice_front(list &&other);
+		void splice(const_iterator pos, list &&other);
+		void splice(const_iterator pos, list &&other, const_iterator it);
+		void splice(const_iterator pos, list &&other, const_iterator first, const_iterator last);
 		size_type size() const noexcept;
 		list<value_type, allocator_type> subsequence(iterator from, iterator to);
 		list<value_type, allocator_type> suffix(size_type max_length);
@@ -160,6 +169,9 @@ namespace ctl {
 		std::list<value_type> to_std_list() const;
 		std::set<value_type> to_std_set() const;
 		bool true_for_all(conformer conform) const;
+
+		void unique();
+		void unique(comparer predicate);
 	};
 
 	//! Non member functions
@@ -315,6 +327,7 @@ namespace ctl {
 		template<class... Args>
 		inline void _construct_at(node_point node, Args &&...args);
 		inline void _quick_sort(iterator first, iterator last);
+		inline void _quick_sort(iterator first, iterator last, comparer predicate);
 	public:
 		inline explicit list(const Allocator &alloc = Allocator())
 			: list::bidirectional_access_collection(alloc), _head(_new_node()), _tail(_head), _size(0) {}
@@ -503,9 +516,21 @@ namespace ctl {
 		if (first == last) return;
 		value_type pivot = *first;
 		iterator middle1 = std::partition(first, last,
-		                                  [pivot](const auto &value) { return value < pivot; });
+		                                  [&pivot](const auto &value) { return value < pivot; });
 		iterator middle2 = std::partition(middle1, last,
-		                                  [pivot](const auto &value) { return !(pivot < value); });
+		                                  [&pivot](const auto &value) { return !(pivot < value); });
+
+		_quick_sort(first, middle1);
+		_quick_sort(middle2, last);
+	}
+	template<class T, class Allocator>
+	void list<T, Allocator>::_quick_sort(iterator first, iterator last, comparer predicate) {
+		if (first == last) return;
+		value_type pivot = *first;
+		iterator middle1 = std::partition(first, last,
+		                                  [pivot, predicate](const auto &value) { return predicate(value, pivot); });
+		iterator middle2 = std::partition(middle1, last,
+		                                  [pivot, predicate](const auto &value) { return !predicate(pivot, value); });
 		_quick_sort(first, middle1);
 		_quick_sort(middle2, last);
 	}
@@ -893,11 +918,11 @@ namespace ctl {
 	}
 	template<class T, class Allocator>
 	void list<T, Allocator>::sort() {
-		_quick_sort(this->begin(), this->end());
+		_quick_sort(this->begin(), this->end()); // faster, than merge sort (?)
 	}
 	template<class T, class Allocator>
 	void list<T, Allocator>::sort(comparer predicate) {
-
+		_quick_sort(this->begin(), this->end(), predicate);
 	}
 	template<class T, class Allocator>
 	void list<T, Allocator>::splice_back(list &&other) {
