@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <ostream>
 #include "../extra/generator.hpp"
+#include "../extra/profiler.hpp"
 std::default_random_engine generator(static_cast<unsigned int>(time(0)));
 
 template<class Iterator>
@@ -64,7 +65,8 @@ protected:
 		generator = std::default_random_engine(time(0));
 		stdlst = new std::list<int>();
 		ctllst = new ctl::list<int>();
-		size_t size = get_size(10000);
+//		size_t size = get_size(10000);
+		size_t size = 100000;
 		this->fill(size);
 	}
 public:
@@ -253,6 +255,17 @@ TEST_F(list_test_fixture, min_max) {
 
 	ASSERT_EQ(c_result, s_result);
 }
+TEST_F(list_test_fixture, merge) {
+	std::list<int> list1 = {5, 9, 0, 1, 3};
+	std::list<int> list2 = {8, 7, 2, 6, 4};
+
+	ctl::list<int> clist1 = {5, 9, 0, 1, 3};
+	ctl::list<int> clist2 = {8, 7, 2, 6, 4};
+
+	list1.merge(list2);
+	clist1.merge(std::move(clist2));
+	ASSERT_EQ(clist1, list1);
+}
 
 TEST_F(list_test_fixture, pop_back) {
 	ctllst->pop_back();
@@ -322,19 +335,35 @@ TEST_F(list_test_fixture, splice_2) {
 	ctl::list<int> clist1 = {1, 2, 3, 4, 5};
 	ctl::list<int> clist2 = {10, 20, 30, 40, 50};
 
-	auto offset = /*this->get_size(list1.size());*/2;
+	auto offset = this->get_size(list1.size());
+	auto max_value = list1.size() - offset;
+	auto diff = std::min(this->get_size(max_value), max_value);
+
 	auto it = iterator_with_offset(list1.begin(), offset);
 	auto it_ = iterator_with_offset(list2.begin(), offset);
-	auto it_1 = iterator_with_offset(list2.begin(), offset + 2);
+	auto it_1 = iterator_with_offset(list2.begin(), offset + diff);
 
 	auto cit = iterator_with_offset(clist1.begin(), offset);
-	auto cit_ = iterator_with_offset(clist1.begin(), offset);
-	auto cit_1 = iterator_with_offset(clist1.begin(), offset + 2);
+	auto cit_ = iterator_with_offset(clist2.begin(), offset);
+	auto cit_1 = iterator_with_offset(clist2.begin(), offset + diff);
 
 	list1.splice(it, list2, it_, it_1);
 	clist1.splice(cit, std::move(clist2), cit_, cit_1);
 
 	ASSERT_EQ(list1, clist1);
+}
+TEST_F(list_test_fixture, sort) {
+	debug::profiler profiler;
+	profiler.start();
+	stdlst->sort();
+	profiler.finish();
+	cout << "\nStd time: " << profiler.time() << endl;
+	profiler.clear();
+	profiler.start();
+	ctllst->sort();
+	profiler.finish();
+	cout << "Ctl time: " << profiler.time() << endl;
+	ASSERT_EQ(*stdlst, *ctllst);
 }
 
 TEST_F(list_test_fixture, true_for_all) {
