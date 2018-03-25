@@ -33,7 +33,7 @@ namespace ctl {
 		explicit operator std::string() const noexcept override;
 	public:
 		template<typename R>
-		inline R accumulate(R initial, R (*next_result)(R, const_reference));
+		inline R accumulate(R initial, std::function<R(R, const_reference)> next_result);
 
 		inline bool contains(const_reference item) const; // qt
 		inline bool contains(conformer predicate) const; // qt
@@ -73,7 +73,7 @@ namespace ctl {
 	}
 	template<class T, class Iterator>
 	template<typename R>
-	R bidirectional_access_sequence<T, Iterator>::accumulate(R initial, R (*next_result)(R, const_reference)) {
+	R bidirectional_access_sequence<T, Iterator>::accumulate(R initial, std::function<R(R, const_reference)> next_result) {
 		for (iterator it = this->begin(); it != this->end(); ++it)
 			initial = next_result(initial, *it);
 
