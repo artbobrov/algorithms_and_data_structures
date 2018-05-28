@@ -200,7 +200,7 @@ namespace ctl {
 
 #include <iterator>
 #include "../abstract/abstracts.hpp"
-#include "../../tests/extra/extra_functions.hpp"
+
 namespace ctl {
 	template<class T>
 	struct __node {
