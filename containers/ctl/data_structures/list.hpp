@@ -120,6 +120,8 @@ namespace ctl {
 		size_type max_size() const noexcept;
 		iterator min() const;
 		iterator min(comparer comp) const;
+		void merge(list &&other);
+		void merge(list &&other, comparer predicate);
 
 		void pop_back();
 		void pop_back(size_type count);
@@ -150,6 +152,13 @@ namespace ctl {
 		void reverse();
 		void reverse(iterator first, iterator last);
 
+		void sort();
+		void sort(comparer predicate);
+		void splice_back(list &&other);
+		void splice_front(list &&other);
+		void splice(const_iterator pos, list &&other);
+		void splice(const_iterator pos, list &&other, const_iterator it);
+		void splice(const_iterator pos, list &&other, const_iterator first, const_iterator last);
 		size_type size() const noexcept;
 		list<value_type, allocator_type> subsequence(iterator from, iterator to);
 		list<value_type, allocator_type> suffix(size_type max_length);
@@ -160,6 +169,9 @@ namespace ctl {
 		std::list<value_type> to_std_list() const;
 		std::set<value_type> to_std_set() const;
 		bool true_for_all(conformer conform) const;
+
+		void unique();
+		void unique(comparer predicate);
 	};
 
 	//! Non member functions
@@ -314,12 +326,11 @@ namespace ctl {
 		inline void _delete_node(node_point point);
 		template<class... Args>
 		inline void _construct_at(node_point node, Args &&...args);
+		inline void _quick_sort(iterator first, iterator last);
+		inline void _quick_sort(iterator first, iterator last, comparer predicate);
 	public:
 		inline explicit list(const Allocator &alloc = Allocator())
-			: list::bidirectional_access_collection(alloc), _head(_new_node()), _tail(_head), _size(0) {
-			_head.data_point->next = _tail.data_point;
-			_tail.data_point->prev = _head.data_point;
-		}
+			: list::bidirectional_access_collection(alloc), _head(_new_node()), _tail(_head), _size(0) {}
 
 		inline explicit list(size_type count, const Allocator &alloc = Allocator()) :
 			list(alloc) { for (; count > 0; --count) push_back(value_type()); }
@@ -349,7 +360,6 @@ namespace ctl {
 	public: // operators
 		list &operator=(const list &other);
 		list &operator=(list &&other) noexcept;
-
 	public:
 		inline void append(bidirectional_element_accessible_modifiable<value_type, iterator> &value) override;
 
@@ -391,6 +401,8 @@ namespace ctl {
 
 		template<typename U>
 		inline list<U, allocator_type> map(std::function<U(reference)> mapper);
+		inline void merge(list &&other);
+		inline void merge(list &&other, comparer predicate);
 
 		inline void pop_back() override;
 		inline void pop_back(size_type count) override;
@@ -413,11 +425,21 @@ namespace ctl {
 		inline void resize(size_type count, const value_type &value) override;
 		inline list reversed();
 
+		inline void sort();
+		inline void sort(comparer predicate);
+		inline void splice_back(list &&other);
+		inline void splice_front(list &&other);
+		inline void splice(const_iterator pos, list &&other);
+		inline void splice(const_iterator pos, list &&other, const_iterator it);
+		inline void splice(const_iterator pos, list &&other, const_iterator first, const_iterator last);
 		inline list suffix(size_type max_length);
 		inline list suffix(conformer predicate);
 		inline size_type size() const noexcept override { return _size; }
 		inline list<value_type, allocator_type> subsequence(iterator from, iterator to);
 		inline void swap(list<value_type, allocator_type> &other);
+
+		inline void unique();
+		inline void unique(comparer predicate);
 	};
 	/*
 	 * Non member functions: BEGIN
@@ -487,6 +509,30 @@ namespace ctl {
 	template<class... Args>
 	void list<T, Allocator>::_construct_at(node_point node, Args &&... args) {
 		this->_allocator.construct(&(node->data), std::forward<Args>(args)...);
+	}
+
+	template<class T, class Allocator>
+	void list<T, Allocator>::_quick_sort(iterator first, iterator last) {
+		if (first == last) return;
+		value_type pivot = *first;
+		iterator middle1 = std::partition(first, last,
+		                                  [&pivot](const auto &value) { return value < pivot; });
+		iterator middle2 = std::partition(middle1, last,
+		                                  [&pivot](const auto &value) { return !(pivot < value); });
+
+		_quick_sort(first, middle1);
+		_quick_sort(middle2, last);
+	}
+	template<class T, class Allocator>
+	void list<T, Allocator>::_quick_sort(iterator first, iterator last, comparer predicate) {
+		if (first == last) return;
+		value_type pivot = *first;
+		iterator middle1 = std::partition(first, last,
+		                                  [pivot, predicate](const auto &value) { return predicate(value, pivot); });
+		iterator middle2 = std::partition(middle1, last,
+		                                  [pivot, predicate](const auto &value) { return !predicate(pivot, value); });
+		_quick_sort(first, middle1);
+		_quick_sort(middle2, last);
 	}
 
 	template<class T, class Allocator>
@@ -561,8 +607,6 @@ namespace ctl {
 	typename list<T, Allocator>::reference list<T, Allocator>::emplace(const_iterator position, Args &&... args) {
 		if (position == this->begin())
 			return emplace_front(std::forward<Args>(args)...);
-		else if (position == this->end())
-			return emplace_back(std::forward<Args>(args)...);
 		node_point new_node = _new_node(std::forward<Args>(args)...);
 		new_node->next = position.data_point;
 		new_node->prev = position.data_point->prev;
@@ -574,13 +618,14 @@ namespace ctl {
 	template<class T, class Allocator>
 	template<class... Args>
 	typename list<T, Allocator>::reference list<T, Allocator>::emplace_back(Args &&... args) {
-		node_point new_tail = _new_node();
-		_construct_at(_tail.data_point, std::forward<Args>(args)...);
-		new_tail->prev = _tail.data_point;
-		_tail.data_point->next = new_tail;
-		_tail.data_point = new_tail;
+		node_point new_node = _new_node(std::forward<Args>(args)...);
+		_tail.data_point->prev->next = new_node;
+		_tail.data_point->prev = new_node;
+		new_node->next = _tail.data_point;
+		new_node->prev = _tail.data_point->prev;
+
 		++_size;
-		return new_tail->data;
+		return new_node->data;
 	}
 	template<class T, class Allocator>
 	template<class... Args>
@@ -597,9 +642,6 @@ namespace ctl {
 		if (position == this->begin()) {
 			pop_front();
 			return begin();
-		} else if (position == this->end()) {
-			pop_back();
-			return end();
 		}
 
 		node_point deleted_node = position.data_point;
@@ -626,9 +668,6 @@ namespace ctl {
 		if (position == this->begin()) {
 			push_front(value);
 			return this->begin();
-		} else if (position == this->end()) {
-			push_back(value);
-			return this->end();
 		}
 
 		node_point new_node = _new_node(value);
@@ -686,6 +725,41 @@ namespace ctl {
 		     ++it, ++first)
 			*it = mapper(*first);
 		return other;
+	}
+	template<class T, class Allocator>
+	void list<T, Allocator>::merge(list &&other) {
+		if (this != &other) {
+			iterator it1 = begin(), it2 = other.begin();
+			while (it1 != end() && it2 != other.end()) {
+				if (*it1 <= *it2)
+					++it1;
+				else {
+					iterator temp = it2++;
+					splice(it1, std::move(other), temp);
+				}
+			}
+			if (it1 == end()) {
+				splice(it1, std::move(other), it2, other.end());
+			}
+		}
+	}
+
+	template<class T, class Allocator>
+	void list<T, Allocator>::merge(list &&other, comparer predicate) {
+		if (this != &other) {
+			iterator it1 = begin(), it2 = other.begin();
+			while (it1 != end() && it2 != other.end()) {
+				if (predicate(*it2, *it1))
+					++it1;
+				else {
+					iterator temp = it2++;
+					splice(it1, std::move(other), temp);
+				}
+			}
+			if (it1 == end()) {
+				splice(it1, std::move(other), it2, other.end());
+			}
+		}
 	}
 
 	template<class T, class Allocator>
@@ -836,6 +910,78 @@ namespace ctl {
 		}
 	}
 	template<class T, class Allocator>
+	void list<T, Allocator>::splice_front(list &&other) {
+		if (!other.empty()) {
+			other.splice_back(std::move(*this));
+			swap(other);
+		}
+	}
+	template<class T, class Allocator>
+	void list<T, Allocator>::sort() {
+		_quick_sort(this->begin(), this->end()); // faster, than merge sort (?)
+	}
+	template<class T, class Allocator>
+	void list<T, Allocator>::sort(comparer predicate) {
+		_quick_sort(this->begin(), this->end(), predicate);
+	}
+	template<class T, class Allocator>
+	void list<T, Allocator>::splice_back(list &&other) {
+		if (!other.empty()) {
+			_tail.data_point->prev->next = other._head.data_point;
+			other._head.data_point->prev = _tail.data_point->prev;
+			_tail.data_point = other._tail.data_point;
+			_size += other.size();
+			other._head.data_point = other._tail.data_point = nullptr;
+			other._size = 0;
+		}
+	}
+	template<class T, class Allocator>
+	void list<T, Allocator>::splice(const_iterator pos, list &&other) {
+		if (!other.empty()) {
+			if (pos == this->begin())
+				splice_front(std::move(other));
+			else {
+				pos.data_point->prev->next = other._head.data_point;
+				other._head.data_point->prev = pos.data_point->prev;
+				other._tail.data_point->prev->next = pos.data_point;
+				pos.data_point->prev = other._tail.data_point->prev;
+				_size += other.size();
+
+				other._head.data_point = other._tail.data_point = nullptr;
+				other._size = 0;
+			}
+		}
+	}
+	template<class T, class Allocator>
+	void list<T, Allocator>::splice(const_iterator pos, list &&other, const_iterator it) {
+		iterator next = it;
+		splice(pos, std::move(other), it, ++next);
+	}
+	template<class T, class Allocator>
+	void list<T, Allocator>::splice(const_iterator pos, list &&other, const_iterator first, const_iterator last) {
+		if (first != last) {
+			node_point tail_node = last.data_point->prev;
+			if (first == other.begin()) {
+				other._head.data_point = last.data_point;
+				other._head.data_point->prev = nullptr;
+			} else {
+				first.data_point->prev->next = last.data_point;
+				last.data_point->prev = first.data_point->prev;
+			}
+			if (pos == this->begin()) {
+				first.data_point->prev = nullptr;
+				tail_node->next = _head.data_point;
+				_head.data_point->prev = tail_node;
+				_head.data_point = first.data_point;
+			} else {
+				pos.data_point->prev->next = first.data_point;
+				first.data_point->prev = pos.data_point->prev;
+				tail_node->next = pos.data_point;
+				pos.data_point->prev = tail_node;
+			}
+		}
+	}
+	template<class T, class Allocator>
 	list<T, Allocator> list<T, Allocator>::suffix(conformer predicate) {
 		iterator first = end();
 		for (; first != begin() && predicate(*first); --first) {}
@@ -859,6 +1005,25 @@ namespace ctl {
 		swap(other._tail, _tail);
 		swap(other._head, _head);
 		swap(other._size, _size);
+	}
+	template<class T, class Allocator>
+	void list<T, Allocator>::unique() {
+		for (iterator first = this->begin(), last = this->end(); first != last;) {
+			iterator it = iterator(first.data_point->next);
+			for (; it != last && *first == *it; ++it);
+			if (++first != it)
+				first = erase(first, it);
+		}
+	}
+
+	template<class T, class Allocator>
+	void list<T, Allocator>::unique(comparer predicate) {
+		for (iterator first = this->begin(), last = this->end(); first != last;) {
+			iterator it = iterator(first.data_point->next);
+			for (; it != last && predicate(*first, *it); ++it);
+			if (++first != it)
+				first = erase(first, it);
+		}
 	}
 }
 
