@@ -1,22 +1,29 @@
 # Computer science stuff
 
 ## Content
+
 - [Computer science stuff](#computer-science-stuff)
-    - [Content](#content)
-    - [Custom template library (ctl)](#custom-template-library-ctl)
-    - [Design patterns](#design-patterns)
-        - [Behavioral patterns](#behavioral-patterns)
-        - [Creational patterns](#creational-patterns)
-        - [Structural patterns](#structural-patterns)
+  - [Content](#content)
+  - [Algorithms](#algorithms)
+  - [Containers](#containers)
+  - [Design patterns](#design-patterns)
+    - [Behavioral patterns](#behavioral-patterns)
+    - [Creational patterns](#creational-patterns)
+    - [Structural patterns](#structural-patterns)
 
+## Algorithms
 
-## Custom template library (ctl)
+- [Huffman compression](./algorithms/huffman)
 
-Data structures implemented in ctl:
+## Containers
 
-* [vector](./containers/ctl/data_structures/vector.hpp)
-* [list](./containers/ctl/data_structures/list.hpp)
+- [Whatever(any)](./containers/whatever) – type-safe any type container.
 
+- [Thread pool](./containers/thread_pool)
+
+- [Variant](./containers/variant)
+
+- [Big natural number](./containers/bignum)
 
 ## Design patterns
 
